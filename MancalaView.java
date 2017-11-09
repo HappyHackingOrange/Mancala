@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.awt.event.*;
 import javax.swing.*;
 
 /**
@@ -10,6 +11,7 @@ import javax.swing.*;
 public class MancalaView {
 	
 	private MancalaModel model;
+	private MancalaBoard board;
 
 	public MancalaView(MancalaModel model) {
 		
@@ -44,10 +46,21 @@ public class MancalaView {
 		topPanel.add(topLeftPanel, BorderLayout.WEST);
 		topPanel.add(topRightPanel, BorderLayout.EAST);
 		
+		// Make a new board for the bottom panel
+		this.board = new MancalaBoard(model, 1000, 400);
+
+		// Action listeners
+		buttonStart.addActionListener( event -> {
+			model.emptyHoles();
+			model.addInitStones();
+			board.randomizeAllPositions();
+			board.repaint();
+		});
+
 		// Put all panels in one frame
 		JFrame frame = new JFrame();
 		frame.add(topPanel, BorderLayout.NORTH);
-		frame.add(new MancalaBoard(model, 1000, 400), BorderLayout.CENTER);
+		frame.add(board, BorderLayout.CENTER);
 		frame.setTitle("Mancala");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.pack();

@@ -81,34 +81,15 @@ public class MancalaBoard extends JPanel {
 
 		// Make the corners look more natural
 		board.setRoundRect(pad, pad, width - pad * 2, height - pad * 2, holeWidth + pad, holeWidth + pad);
-
-		// Randomize stone positions. Need to make sure each stones are not too close to
-		// each other.
-		for (int i = 0; i < 13; i++) {
-			if (model.holes.get(i).size() > 0) {
-				randomizePosition(model.holes.get(i).get(0), holesBound[i]);
-				for (int j = 1; j < model.holes.get(i).size(); j++) {
-					MancalaStone stone1 = model.holes.get(i).get(j);
-					boolean tooClose = true;
-					while (tooClose) {
-						randomizePosition(stone1, holesBound[i]);
-						tooClose = false;
-						for (int k = 0; k < j; k++) {
-							MancalaStone stone2 = model.holes.get(i).get(k);
-							if (distance(stone1, stone2) < stoneSize / 2) {
-								tooClose = true;
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
+		
+		randomizeAllPositions();
 
 	}
 
 	@Override
-	public void paint(Graphics g) {
+	public void paintComponent(Graphics g) {
+
+		super.paintComponent(g);
 
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setColor(new Color(176, 136, 87));
@@ -175,6 +156,35 @@ public class MancalaBoard extends JPanel {
 	}
 
 	/**
+	 * Randomize stone positions. Need to make sure each stones are not too close to
+	 * each other.
+	 */
+	public void randomizeAllPositions() {
+
+		for (int i = 0; i < 13; i++) {
+			if (model.holes.get(i).size() > 0) {
+				randomizePosition(model.holes.get(i).get(0), holesBound[i]);
+				for (int j = 1; j < model.holes.get(i).size(); j++) {
+					MancalaStone stone1 = model.holes.get(i).get(j);
+					boolean tooClose = true;
+					while (tooClose) {
+						randomizePosition(stone1, holesBound[i]);
+						tooClose = false;
+						for (int k = 0; k < j; k++) {
+							MancalaStone stone2 = model.holes.get(i).get(k);
+							if (distance(stone1, stone2) < stoneSize / 2) {
+								tooClose = true;
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+
+	}
+
+	/**
 	 * Calculate distance between stones.
 	 * 
 	 * @param stone1
@@ -185,4 +195,5 @@ public class MancalaBoard extends JPanel {
 		return Math.sqrt(Math.pow(stone1.getX() - stone2.getX(), 2) + Math.pow(stone1.getY() - stone2.getY(), 2));
 
 	}
+
 }

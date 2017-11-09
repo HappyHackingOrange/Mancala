@@ -18,7 +18,26 @@ public class MancalaModel {
 		for (int i = 0; i < 14; i++)
 			holes.add(new ArrayList<MancalaStone>());
 		
-		// Add initial number of stones to each small holes
+		addInitStones();
+
+		
+	}
+	
+	/**
+	 * Empty all stones in each hole.
+	 */
+	public void emptyHoles() {
+		
+		for (int i = 0; i < 14; i++)
+			holes.get(i).clear();
+		
+	}
+	
+	/**
+	 * Add initial number of stones to each small holes
+	 */
+	public void addInitStones() {
+		
 		for (int i = 0; i < 6; i++) {
 			for (int j = 0; j < initStones; j++)
 				holes.get(i).add(new MancalaStone());
@@ -26,7 +45,6 @@ public class MancalaModel {
 		for (int i = 7; i < 13; i++)
 			for (int j = 0; j < initStones; j++)
 				holes.get(i).add(new MancalaStone());
-		
 	}
 
 }
