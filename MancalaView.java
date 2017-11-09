@@ -47,11 +47,11 @@ public class MancalaView {
 		// Put all panels in one frame
 		JFrame frame = new JFrame();
 		frame.add(topPanel, BorderLayout.NORTH);
-		frame.add(new MancalaPanel(1000, 400), BorderLayout.CENTER);
+		frame.add(new MancalaBoard(model, 1000, 400), BorderLayout.CENTER);
 		frame.setTitle("Mancala");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.pack();
-//		frame.setSize(new Dimension(width, height));
+		frame.setLocationRelativeTo(null); // Center the window
 		frame.setVisible(true);
 
 	}

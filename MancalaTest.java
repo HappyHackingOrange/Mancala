@@ -1,6 +1,6 @@
 
 /**
- * Test and run the Mancala game.
+ * Test and run the Mancala game using MVC model.
  * 
  * @author Vincent Stowbunenko
  *
