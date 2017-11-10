@@ -1,27 +1,35 @@
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
+import java.util.*;
 
 /**
  * Displays the GUI frame of a Mancala board.
+ * The action listeners in this are the "controllers" of the MVC model.
  * 
  * @author Vincent Stowbunenko
  *
  */
-public class MancalaView {
-	
+public class MancalaView extends JFrame implements Observer{
+
 	private MancalaModel model;
-	private MancalaBoard board;
+	private MancalaBoardPanel board;
+	private Button buttonStart;
+	private Button buttonUndo;
+	ButtonGroup bg;
 
 	public MancalaView(MancalaModel model) {
 		
+		// Connect the view to the model
 		this.model = model;
-		
+		model.addObserver(this);
+
 		// A panel with just radio buttons
 		JPanel radioPanel = new JPanel();
 		JRadioButton rbutton1 = new JRadioButton("3", true);
+		rbutton1.setActionCommand(rbutton1.getText());
 		JRadioButton rbutton2 = new JRadioButton("4");
-		ButtonGroup bg = new ButtonGroup();
+		rbutton2.setActionCommand(rbutton2.getText());
+		bg = new ButtonGroup();
 		bg.add(rbutton1);
 		bg.add(rbutton2);
 		radioPanel.add(rbutton1);
@@ -34,39 +42,56 @@ public class MancalaView {
 
 		// Top left panel, just all push buttons
 		JPanel topLeftPanel = new JPanel();
-		Button buttonStart = new Button("Start");
-		Button buttonUndo = new Button("Undo");
-		buttonStart.setPreferredSize(new Dimension(80,40));
-		buttonUndo.setPreferredSize(new Dimension(80,40));
+		buttonStart = new Button("Start");
+		buttonStart.addActionListener(event -> {
+			model.emptyHoles();
+			model.populateStones(Integer.parseInt(bg.getSelection().getActionCommand()));
+			board.clearStones();
+			board.populateStones(model.getHoles());
+			board.randomizeAllPositions();
+			board.repaint();
+		});
+		buttonUndo = new Button("Undo");
+		buttonStart.setPreferredSize(new Dimension(80, 40));
+		buttonUndo.setPreferredSize(new Dimension(80, 40));
 		topLeftPanel.add(buttonStart);
 		topLeftPanel.add(buttonUndo);
-		
+
 		// Add panel with start and undo buttons at upper left corner
 		JPanel topPanel = new JPanel(new BorderLayout());
 		topPanel.add(topLeftPanel, BorderLayout.WEST);
 		topPanel.add(topRightPanel, BorderLayout.EAST);
-		
-		// Make a new board for the bottom panel
-		this.board = new MancalaBoard(model, 1000, 400);
 
-		// Action listeners
-		buttonStart.addActionListener( event -> {
-			model.emptyHoles();
-			model.addInitStones();
-			board.randomizeAllPositions();
-			board.repaint();
-		});
+		// Make a new board for the bottom panel
+		board = new MancalaBoardPanel(1000, 400);
 
 		// Put all panels in one frame
-		JFrame frame = new JFrame();
-		frame.add(topPanel, BorderLayout.NORTH);
-		frame.add(board, BorderLayout.CENTER);
-		frame.setTitle("Mancala");
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.pack();
-		frame.setLocationRelativeTo(null); // Center the window
-		frame.setVisible(true);
+		add(topPanel, BorderLayout.NORTH);
+		add(board, BorderLayout.CENTER);
+		setTitle("Mancala");
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		pack();
+		setLocationRelativeTo(null); // Center the window
+		setVisible(true);
 
+	}
+
+	public Button getButtonStart() {
+		return buttonStart;
+	}
+
+	public Button getButtonUndo() {
+		return buttonUndo;
+	}
+
+	public MancalaBoardPanel getBoard() {
+		return board;
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

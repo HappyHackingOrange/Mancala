@@ -6,21 +6,29 @@ import java.util.*;
  * @author Vincent Stowbunenko
  *
  */
-public class MancalaModel {
+public class MancalaModel extends Observable{
 	
-	MancalaStone[] stones;
-	List<List<MancalaStone>> holes;
-	int initStones = 3;
+	int[] holes;
 	
+	/**
+	 * Constructor
+	 */
 	public MancalaModel() {
 		
-		holes = new ArrayList<List<MancalaStone>>(14);
-		for (int i = 0; i < 14; i++)
-			holes.add(new ArrayList<MancalaStone>());
+		holes = new int[14];
 		
-		addInitStones();
-
-		
+	}
+	
+	// Getters and setters
+	
+	public int[] getHoles() {
+		return holes;
+	}
+	
+		public void setHoles(int[] holes) {
+		this.holes = holes;
+		setChanged();
+		notifyObservers();
 	}
 	
 	/**
@@ -29,22 +37,21 @@ public class MancalaModel {
 	public void emptyHoles() {
 		
 		for (int i = 0; i < 14; i++)
-			holes.get(i).clear();
+			holes[i] = 0;
 		
 	}
 	
 	/**
 	 * Add initial number of stones to each small holes
 	 */
-	public void addInitStones() {
+	public void populateStones(int initStones) {
 		
-		for (int i = 0; i < 6; i++) {
-			for (int j = 0; j < initStones; j++)
-				holes.get(i).add(new MancalaStone());
-		}
-		for (int i = 7; i < 13; i++)
-			for (int j = 0; j < initStones; j++)
-				holes.get(i).add(new MancalaStone());
-	}
+		for (int i = 0; i < 6; i++)
+			holes[i] = initStones;
 
+		for (int i = 7; i < 13; i++)
+			holes[i] = initStones;
+
+	}
+	
 }

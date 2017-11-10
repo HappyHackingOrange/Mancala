@@ -1,3 +1,4 @@
+import javax.swing.SwingUtilities;
 
 /**
  * Test and run the Mancala game using MVC model.
@@ -5,18 +6,19 @@
  * @author Vincent Stowbunenko
  *
  */
-public class MancalaTest {
+public class MancalaTest implements Runnable{
+
+	@Override
+	public void run() {
+
+		MancalaModel model = new MancalaModel();
+		MancalaView view = new MancalaView(model);
+		
+	}
 
 	public static void main(String[] args) {
 		
-		// Model
-		MancalaModel model = new MancalaModel();
-		
-		// View
-		MancalaView view = new MancalaView(model);
-		
-		// Controller
-		// MancalaController controller = new MancalaController(model, view);
+		SwingUtilities.invokeLater(new MancalaTest());
 
 	}
 
