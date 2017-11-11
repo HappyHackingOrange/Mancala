@@ -1,6 +1,5 @@
 import java.awt.*;
 import javax.swing.*;
-import java.util.*;
 
 /**
  * Displays the GUI frame of a Mancala board.
@@ -9,7 +8,7 @@ import java.util.*;
  * @author Vincent Stowbunenko
  *
  */
-public class MancalaView extends JFrame implements Observer{
+public class MancalaView extends JFrame {
 
 	private MancalaModel model;
 	private MancalaBoardPanel board;
@@ -21,7 +20,6 @@ public class MancalaView extends JFrame implements Observer{
 		
 		// Connect the view to the model
 		this.model = model;
-		model.addObserver(this);
 
 		// A panel with just radio buttons
 		JPanel radioPanel = new JPanel();
@@ -44,10 +42,10 @@ public class MancalaView extends JFrame implements Observer{
 		JPanel topLeftPanel = new JPanel();
 		buttonStart = new Button("Start");
 		buttonStart.addActionListener(event -> {
-			model.emptyHoles();
+			model.emptyPits();
 			model.populateStones(Integer.parseInt(bg.getSelection().getActionCommand()));
 			board.clearStones();
-			board.populateStones(model.getHoles());
+			board.populateStones(model.getPits());
 			board.randomizeAllPositions();
 			board.repaint();
 		});
@@ -86,12 +84,6 @@ public class MancalaView extends JFrame implements Observer{
 
 	public MancalaBoardPanel getBoard() {
 		return board;
-	}
-
-	@Override
-	public void update(Observable o, Object arg) {
-		// TODO Auto-generated method stub
-		
 	}
 
 }

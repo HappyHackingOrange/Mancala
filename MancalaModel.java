@@ -1,57 +1,53 @@
-import java.util.*;
-
 /**
  * A model to store raw data for the Mancala game
  * 
  * @author Vincent Stowbunenko
  *
  */
-public class MancalaModel extends Observable{
-	
-	int[] holes;
-	
+public class MancalaModel {
+
+	int[] pits;
+
 	/**
 	 * Constructor
 	 */
 	public MancalaModel() {
-		
-		holes = new int[14];
-		
+
+		pits = new int[14];
+
 	}
-	
+
 	// Getters and setters
-	
-	public int[] getHoles() {
-		return holes;
+
+	public int[] getPits() {
+		return pits;
 	}
-	
-		public void setHoles(int[] holes) {
-		this.holes = holes;
-		setChanged();
-		notifyObservers();
+
+	public void setPits(int[] pits) {
+		this.pits = pits;
 	}
-	
+
 	/**
-	 * Empty all stones in each hole.
+	 * Empty all stones in each pit.
 	 */
-	public void emptyHoles() {
-		
+	public void emptyPits() {
+
 		for (int i = 0; i < 14; i++)
-			holes[i] = 0;
-		
+			pits[i] = 0;
+
 	}
-	
+
 	/**
-	 * Add initial number of stones to each small holes
+	 * Add initial number of stones to each small pits
 	 */
 	public void populateStones(int initStones) {
-		
+
 		for (int i = 0; i < 6; i++)
-			holes[i] = initStones;
+			pits[i] = initStones;
 
 		for (int i = 7; i < 13; i++)
-			holes[i] = initStones;
+			pits[i] = initStones;
 
 	}
-	
+
 }

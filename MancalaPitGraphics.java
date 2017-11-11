@@ -2,18 +2,18 @@ import java.awt.geom.*;
 import java.util.*;
 
 /**
- * A class that holds graphics properties for each hole.
+ * A class that holds graphics properties for each pit.
  * 
  * @author Vincent Stowbunenko
  *
  */
-public class MancalaHoleGraphics {
+public class MancalaPitGraphics {
 
 	private RoundRectangle2D outerBound;
 	private RoundRectangle2D innerBound;
 	List<MancalaStoneGraphics> stones;
 	
-	public MancalaHoleGraphics() {
+	public MancalaPitGraphics() {
 		stones = new ArrayList<>();
 	}
 	

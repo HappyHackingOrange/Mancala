@@ -1,4 +1,5 @@
 import java.awt.*;
+import java.awt.event.*;
 import java.awt.geom.*;
 import java.util.*;
 
@@ -10,77 +11,76 @@ import javax.swing.*;
  * @author Vincent Stowbunenko
  *
  */
-public class MancalaBoardPanel extends JPanel {
+public class MancalaBoardPanel extends JPanel implements MouseListener {
 
 	private RoundRectangle2D board;
-	private MancalaHoleGraphics[] holes;
+	private MancalaPitGraphics[] pits;
 	private double stoneSize;
 	private boolean hasOutlines;
-	private Color[] colors = new Color[] { Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW };
+	private Color[] colors = new Color[] { Color.RED, Color.GREEN, Color.BLUE, Color.WHITE };
 
 	public MancalaBoardPanel(int width, int height) {
 
 		hasOutlines = true;
 		int pad = height / 20;
 		stoneSize = 30;
-		holes = new MancalaHoleGraphics[14];
+		pits = new MancalaPitGraphics[14];
 		for (int i = 0; i < 14; i++)
-			holes[i] = new MancalaHoleGraphics();
+			pits[i] = new MancalaPitGraphics();
 
 		setPreferredSize(new Dimension(width, height));
 
-		// Draw the initial board without holes
+		// Draw the initial board without pits
 		board = new RoundRectangle2D.Double(pad, pad, width - pad * 2, height - pad * 2, 0, 0);
 
-		// Draw big holes
-		double holePad = 10;
-		double holeWidth = board.getWidth() / 8 - 2 * holePad;
-		double bigHoleHeight = board.getHeight() - 2 * holePad;
-		holes[6].setOuterBound(new RoundRectangle2D.Double(board.getX() + holePad, board.getY() + holePad, holeWidth,
-				bigHoleHeight, holeWidth, holeWidth));
-		holes[13].setOuterBound(new RoundRectangle2D.Double(board.getX() + (holeWidth + 2 * holePad) * 7 + holePad,
-				board.getY() + holePad, holeWidth, bigHoleHeight, holeWidth, holeWidth));
+		// Draw big pits
+		double pitPad = 10;
+		double pitWidth = board.getWidth() / 8 - 2 * pitPad;
+		double bigPitHeight = board.getHeight() - 2 * pitPad;
+		pits[6].setOuterBound(new RoundRectangle2D.Double(board.getX() + (pitWidth + 2 * pitPad) * 7 + pitPad,
+				board.getY() + pitPad, pitWidth, bigPitHeight, pitWidth, pitWidth));
+		pits[13].setOuterBound(new RoundRectangle2D.Double(board.getX() + pitPad, board.getY() + pitPad, pitWidth,
+				bigPitHeight, pitWidth, pitWidth));
 
-		// Create big holes boundaries for placing each center of stone in random
+		// Create big pits boundaries for placing each center of stone in random
 		// positions
-		double holeBoundPad = stoneSize / 2;
-		double holeBoundWidth = holes[6].getOuterBound().getWidth() - 2 * holeBoundPad;
-		double bigHoleBoundHeight = holes[6].getOuterBound().getHeight() - 2 * holeBoundPad;
-		holes[6].setInnerBound(new RoundRectangle2D.Double(holes[6].getOuterBound().getX() + holeBoundPad,
-				holes[6].getOuterBound().getY() + holeBoundPad, holeBoundWidth, bigHoleBoundHeight, holeBoundWidth,
-				holeBoundWidth));
-		holes[13].setInnerBound(new RoundRectangle2D.Double(holes[13].getOuterBound().getX() + holeBoundPad,
-				holes[13].getOuterBound().getY() + holeBoundPad, holeBoundWidth, bigHoleBoundHeight, holeBoundWidth,
-				holeBoundWidth));
+		double pitBoundPad = stoneSize / 2;
+		double pitBoundWidth = pits[6].getOuterBound().getWidth() - 2 * pitBoundPad;
+		double bigPitBoundHeight = pits[6].getOuterBound().getHeight() - 2 * pitBoundPad;
+		pits[6].setInnerBound(new RoundRectangle2D.Double(pits[13].getOuterBound().getX() + pitBoundPad,
+				pits[6].getOuterBound().getY() + pitBoundPad, pitBoundWidth, bigPitBoundHeight, pitBoundWidth,
+				pitBoundWidth));
+		pits[13].setInnerBound(new RoundRectangle2D.Double(pits[6].getOuterBound().getX() + pitBoundPad,
+				pits[13].getOuterBound().getY() + pitBoundPad, pitBoundWidth, bigPitBoundHeight, pitBoundWidth,
+				pitBoundWidth));
 
-		// Draw small holes
-		double smallHoleHeight = board.getHeight() / 2 - 2 * holePad;
+		// Draw small pits
+		double smallPitHeight = board.getHeight() / 2 - 2 * pitPad;
 		for (int i = 0; i < 6; i++)
-			holes[i].setOuterBound(
-					new RoundRectangle2D.Double(board.getX() + (holeWidth + 2 * holePad) * (i + 1) + holePad,
-							board.getY() + holePad, holeWidth, smallHoleHeight, holeWidth, holeWidth));
+			pits[i].setOuterBound(new RoundRectangle2D.Double(board.getX() + (pitWidth + 2 * pitPad) * (i + 1) + pitPad,
+					board.getY() + smallPitHeight + pitPad * 3, pitWidth, smallPitHeight, pitWidth, pitWidth));
 		for (int i = 7; i < 13; i++)
-			holes[i].setOuterBound(new RoundRectangle2D.Double(
-					board.getX() + (holeWidth + 2 * holePad) * (i - 6) + holePad,
-					board.getY() + smallHoleHeight + holePad * 3, holeWidth, smallHoleHeight, holeWidth, holeWidth));
+			pits[i].setOuterBound(
+					new RoundRectangle2D.Double(board.getX() + (pitWidth + 2 * pitPad) * (13 - i) + pitPad,
+							board.getY() + pitPad, pitWidth, smallPitHeight, pitWidth, pitWidth));
 
-		// Create big holes boundaries for placing each center of stone in random
+		// Create big pits boundaries for placing each center of stone in random
 		// positions
-		double smallHoleBoundHeight = holes[0].getOuterBound().getHeight() - 2 * holeBoundPad;
+		double smallPitBoundHeight = pits[0].getOuterBound().getHeight() - 2 * pitBoundPad;
 		for (int i = 0; i < 6; i++)
-			holes[i].setInnerBound(new RoundRectangle2D.Double(holes[i].getOuterBound().getX() + holeBoundPad,
-					holes[i].getOuterBound().getY() + holeBoundPad, holeBoundWidth, smallHoleBoundHeight,
-					holeBoundWidth, holeBoundWidth));
+			pits[i].setInnerBound(new RoundRectangle2D.Double(pits[i].getOuterBound().getX() + pitBoundPad,
+					pits[i].getOuterBound().getY() + pitBoundPad, pitBoundWidth, smallPitBoundHeight, pitBoundWidth,
+					pitBoundWidth));
 		for (int i = 7; i < 13; i++)
-			holes[i].setInnerBound(new RoundRectangle2D.Double(holes[i].getOuterBound().getX() + holeBoundPad,
-					holes[i].getOuterBound().getY() + holeBoundPad, holeBoundWidth, smallHoleBoundHeight,
-					holeBoundWidth, holeBoundWidth));
+			pits[i].setInnerBound(new RoundRectangle2D.Double(pits[i].getOuterBound().getX() + pitBoundPad,
+					pits[i].getOuterBound().getY() + pitBoundPad, pitBoundWidth, smallPitBoundHeight, pitBoundWidth,
+					pitBoundWidth));
 
 		// Make the corners look more natural
-		board.setRoundRect(pad, pad, width - pad * 2, height - pad * 2, holeWidth + pad, holeWidth + pad);
+		board.setRoundRect(pad, pad, width - pad * 2, height - pad * 2, pitWidth + pad, pitWidth + pad);
 
-		// Randomize all stone positions
-		randomizeAllPositions();
+		// Listen for any mouse actions
+		addMouseListener(this);
 
 	}
 
@@ -96,38 +96,33 @@ public class MancalaBoardPanel extends JPanel {
 		// Color the board
 		g2.fill(board);
 		g2.setColor(new Color(142, 106, 63));
-		g2.fill(holes[6].getOuterBound());
-		g2.fill(holes[13].getOuterBound());
+		g2.fill(pits[6].getOuterBound());
+		g2.fill(pits[13].getOuterBound());
 		for (int i = 0; i < 6; i++)
-			g2.fill(holes[i].getOuterBound());
+			g2.fill(pits[i].getOuterBound());
 		for (int i = 7; i < 13; i++)
-			g2.fill(holes[i].getOuterBound());
+			g2.fill(pits[i].getOuterBound());
 
 		// Draw the outlines of the board
 		if (hasOutlines) {
 			g2.setColor(Color.BLACK);
 			g2.draw(board);
-			g2.draw(holes[6].getOuterBound());
-			g2.draw(holes[13].getOuterBound());
+			g2.draw(pits[6].getOuterBound());
+			g2.draw(pits[13].getOuterBound());
 			for (int i = 0; i < 6; i++)
-				g2.draw(holes[i].getOuterBound());
+				g2.draw(pits[i].getOuterBound());
 			for (int i = 7; i < 13; i++)
-				g2.draw(holes[i].getOuterBound());
+				g2.draw(pits[i].getOuterBound());
 		}
 
 		// Draw stones
 		for (int i = 0; i < 13; i++)
-			for (MancalaStoneGraphics stone : holes[i].getStones()) {
+			for (MancalaStoneGraphics stone : pits[i].getStones()) {
 				g2.setColor(stone.getColor());
 				g2.fill(new Ellipse2D.Double(stone.getX(), stone.getY(), stoneSize, stoneSize));
 				g2.setColor(Color.BLACK);
 				g2.draw(new Ellipse2D.Double(stone.getX(), stone.getY(), stoneSize, stoneSize));
 			}
-
-		// View the hole boundaries
-		// g2.setColor(Color.BLACK);
-		// for (int i = 0; i < 14; i++)
-		// g2.draw(holes[i].getInnerBound());
 
 	}
 
@@ -161,16 +156,16 @@ public class MancalaBoardPanel extends JPanel {
 	public void randomizeAllPositions() {
 
 		for (int i = 0; i < 13; i++) {
-			if (holes[i].getStones().size() > 0) {
-				randomizePosition(holes[i].getStones().get(0), holes[i].getInnerBound());
-				for (int j = 1; j < holes[i].getStones().size(); j++) {
-					MancalaStoneGraphics stone1 = holes[i].getStones().get(j);
+			if (pits[i].getStones().size() > 0) {
+				randomizePosition(pits[i].getStones().get(0), pits[i].getInnerBound());
+				for (int j = 1; j < pits[i].getStones().size(); j++) {
+					MancalaStoneGraphics stone1 = pits[i].getStones().get(j);
 					boolean tooClose = true;
 					while (tooClose) {
-						randomizePosition(stone1, holes[i].getInnerBound());
+						randomizePosition(stone1, pits[i].getInnerBound());
 						tooClose = false;
 						for (int k = 0; k < j; k++) {
-							MancalaStoneGraphics stone2 = holes[i].getStones().get(k);
+							MancalaStoneGraphics stone2 = pits[i].getStones().get(k);
 							if (distance(stone1, stone2) < stoneSize / 2) {
 								tooClose = true;
 								break;
@@ -199,21 +194,47 @@ public class MancalaBoardPanel extends JPanel {
 	 * Clear all stones on the viewer.
 	 */
 	public void clearStones() {
-		for (MancalaHoleGraphics holeGraphics : holes)
+		for (MancalaPitGraphics holeGraphics : pits)
 			holeGraphics.stones.clear();
 	}
 
 	/**
-	 * Populate the stones on the holes based on the model.
+	 * Populate the stones on the pits based on the model.
 	 * 
-	 * @param holes
-	 *            the holes from the model.
+	 * @param pits
+	 *            the pits from the model.
 	 */
-	public void populateStones(int[] holes) {
-		for (int i = 0; i < holes.length; i++)
-			for (int j = 0; j < holes[i]; j++)
-				this.holes[i].stones.add(new MancalaStoneGraphics(colors[j % colors.length]));
+	public void populateStones(int[] pits) {
+		for (int i = 0; i < pits.length; i++)
+			for (int j = 0; j < pits[i]; j++)
+				this.pits[i].stones.add(new MancalaStoneGraphics(colors[j % colors.length]));
 
+	}
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		Point point = e.getPoint();
+		for (int i = 0; i < 14; i++) {
+			if (pits[i].getOuterBound().contains(point)) {
+				System.out.printf("Pit %d clicked.%n", i);
+			}
+		}
 	}
 
 }

@@ -3,7 +3,7 @@ import java.awt.geom.*;
 import java.util.*;
 
 /**
- * A Mancala stone class containing some graphics properties.
+ * A Mancala stone class to hold each stone's graphics properties.
  * 
  * @author Vincent Stowbunenko
  *
