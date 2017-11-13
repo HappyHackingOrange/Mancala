@@ -13,14 +13,19 @@ import javax.swing.*;
  */
 public class MancalaBoardPanel extends JPanel implements MouseListener {
 
+	private MancalaModel model;
 	private RoundRectangle2D board;
 	private MancalaPitGraphics[] pits;
+	private Map<Integer, MancalaStoneGraphics> stones;
 	private double stoneSize;
 	private boolean hasOutlines;
-	private Color[] colors = new Color[] { Color.RED, Color.GREEN, Color.BLUE, Color.WHITE };
+	private Color[] colors = new Color[] { new Color(0xF16A70), new Color(0xB1D877), new Color(0x8CDCDA),
+			new Color(0x4D4D4D) };
 
-	public MancalaBoardPanel(int width, int height) {
+	public MancalaBoardPanel(int width, int height, MancalaModel model) {
 
+		stones = new HashMap<>();
+		this.model = model;
 		hasOutlines = true;
 		int pad = height / 20;
 		stoneSize = 30;
@@ -42,15 +47,14 @@ public class MancalaBoardPanel extends JPanel implements MouseListener {
 		pits[13].setOuterBound(new RoundRectangle2D.Double(board.getX() + pitPad, board.getY() + pitPad, pitWidth,
 				bigPitHeight, pitWidth, pitWidth));
 
-		// Create big pits boundaries for placing each center of stone in random
-		// positions
+		// Create pits boundaries for placing each center of stone in random positions
 		double pitBoundPad = stoneSize / 2;
 		double pitBoundWidth = pits[6].getOuterBound().getWidth() - 2 * pitBoundPad;
 		double bigPitBoundHeight = pits[6].getOuterBound().getHeight() - 2 * pitBoundPad;
-		pits[6].setInnerBound(new RoundRectangle2D.Double(pits[13].getOuterBound().getX() + pitBoundPad,
+		pits[6].setInnerBound(new RoundRectangle2D.Double(pits[6].getOuterBound().getX() + pitBoundPad,
 				pits[6].getOuterBound().getY() + pitBoundPad, pitBoundWidth, bigPitBoundHeight, pitBoundWidth,
 				pitBoundWidth));
-		pits[13].setInnerBound(new RoundRectangle2D.Double(pits[6].getOuterBound().getX() + pitBoundPad,
+		pits[13].setInnerBound(new RoundRectangle2D.Double(pits[13].getOuterBound().getX() + pitBoundPad,
 				pits[13].getOuterBound().getY() + pitBoundPad, pitBoundWidth, bigPitBoundHeight, pitBoundWidth,
 				pitBoundWidth));
 
@@ -116,7 +120,7 @@ public class MancalaBoardPanel extends JPanel implements MouseListener {
 		}
 
 		// Draw stones
-		for (int i = 0; i < 13; i++)
+		for (int i = 0; i < 14; i++)
 			for (MancalaStoneGraphics stone : pits[i].getStones()) {
 				g2.setColor(stone.getColor());
 				g2.fill(new Ellipse2D.Double(stone.getX(), stone.getY(), stoneSize, stoneSize));
@@ -204,11 +208,52 @@ public class MancalaBoardPanel extends JPanel implements MouseListener {
 	 * @param pits
 	 *            the pits from the model.
 	 */
-	public void populateStones(int[] pits) {
-		for (int i = 0; i < pits.length; i++)
-			for (int j = 0; j < pits[i]; j++)
-				this.pits[i].stones.add(new MancalaStoneGraphics(colors[j % colors.length]));
+	// public void populateStones(int[] pits) {
+	// for (int i = 0; i < pits.length; i++)
+	// for (int j = 0; j < pits[i]; j++)
+	// this.pits[i].stones.add(new MancalaStoneGraphics(colors[j % colors.length]));
+	//
+	// }
+	public void populateStones(ArrayList<LinkedList<Integer>> pits) {
+		for (int i = 0; i < pits.size(); i++)
+			for (int j = 0; j < pits.get(i).size(); j++) {
+				MancalaStoneGraphics msg = new MancalaStoneGraphics(colors[pits.get(i).get(j) % pits.get(i).size()], i);
+				this.pits[i].stones.add(msg);
+				stones.put(pits.get(i).get(j), msg);
+			}
 
+	}
+
+	/**
+	 * Randomize all stone positions which the stones that have moved. Need to check
+	 * to make sure the stones are not too close to each other.
+	 */
+	public void updateStonePositions() {
+		for (int i = 0; i < model.getStones().length; i++) {
+			if (model.getStones()[i] != stones.get(i).getPit()) {
+				MancalaStoneGraphics stone1 = stones.get(i);
+				pits[model.getStones()[i]].getStones().add(stone1);
+				pits[stone1.getPit()].getStones().remove(stone1);
+				stone1.setPit(model.getStones()[i]);
+//				System.out.printf("Pit %d Position: (%f, %f), No of Stones: %d%n", stone1.getPit(), pits[stone1.getPit()].getInnerBound().getX(),
+//						pits[stone1.getPit()].getInnerBound().getY(), pits[stone1.getPit()].getStones().size());
+				boolean tooClose = true;
+				while (tooClose) {
+					randomizePosition(stone1, pits[stone1.getPit()].getInnerBound());
+					tooClose = false;
+					for (int k = 0; k < pits[stone1.getPit()].getStones().size(); k++) {
+						MancalaStoneGraphics stone2 = pits[stone1.getPit()].getStones().get(k);
+						if (stone1 == stone2)
+							continue;
+						if (distance(stone1, stone2) < stoneSize / 2) {
+							tooClose = true;
+							break;
+						}
+					}
+				}
+			}
+
+		}
 	}
 
 	@Override
@@ -230,11 +275,17 @@ public class MancalaBoardPanel extends JPanel implements MouseListener {
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		Point point = e.getPoint();
-		for (int i = 0; i < 14; i++) {
+		for (int i = 0; i < 14; i++)
 			if (pits[i].getOuterBound().contains(point)) {
-				System.out.printf("Pit %d clicked.%n", i);
+//				System.out.printf("Pit %d clicked.%n%n", i);
+				model.sow(i);
+				System.out.println(model);
+				// for (int j = 0; j < model.getStones().length; j++)
+				// System.out.printf("Stone %d is in pit %d%n", j, model.getStones()[j]);
+				updateStonePositions();
+				repaint();
+				break;
 			}
-		}
 	}
 
 }

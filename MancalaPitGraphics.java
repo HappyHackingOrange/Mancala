@@ -11,10 +11,10 @@ public class MancalaPitGraphics {
 
 	private RoundRectangle2D outerBound;
 	private RoundRectangle2D innerBound;
-	List<MancalaStoneGraphics> stones;
+	LinkedList<MancalaStoneGraphics> stones;
 	
 	public MancalaPitGraphics() {
-		stones = new ArrayList<>();
+		stones = new LinkedList<>();
 	}
 	
 	public RoundRectangle2D getOuterBound() {
@@ -29,10 +29,10 @@ public class MancalaPitGraphics {
 	public void setInnerBound(RoundRectangle2D innerBound) {
 		this.innerBound = innerBound;
 	}
-	public List<MancalaStoneGraphics> getStones() {
+	public LinkedList<MancalaStoneGraphics> getStones() {
 		return stones;
 	}
-	public void setStones(List<MancalaStoneGraphics> stones) {
+	public void setStones(LinkedList<MancalaStoneGraphics> stones) {
 		this.stones = stones;
 	}
 	

@@ -43,6 +43,7 @@ public class MancalaView extends JFrame {
 		buttonStart = new Button("Start");
 		buttonStart.addActionListener(event -> {
 			model.emptyPits();
+			model.setPlayerTurn('A');
 			model.populateStones(Integer.parseInt(bg.getSelection().getActionCommand()));
 			board.clearStones();
 			board.populateStones(model.getPits());
@@ -61,7 +62,7 @@ public class MancalaView extends JFrame {
 		topPanel.add(topRightPanel, BorderLayout.EAST);
 
 		// Make a new board for the bottom panel
-		board = new MancalaBoardPanel(1000, 400);
+		board = new MancalaBoardPanel(1000, 400, model);
 
 		// Put all panels in one frame
 		add(topPanel, BorderLayout.NORTH);
