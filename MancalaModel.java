@@ -80,133 +80,81 @@ public class MancalaModel {
 	 */
 	public void sow(int pitNo) {
 
-		int stones;
-
 		// Can't sow on Mancala pits
 		if (pitNo != 6 && pitNo != 13)
+
 			switch (playerTurn) {
 
 			// If its player A's turn
 			case 'A':
-
-				// Player A only can click on pits 0 to 5
-				if (pitNo < 6) {
-
-					// stones = pits[pitNo];
-					stones = pits.get(pitNo).size();
-
-					// Empty the sowed pit
-					// pits[pitNo] = 0;
-
-					// Sow one stone in each pit at correct pit sequence
-					// for (int i = 1; i <= stones; i++) {
-					int i = 0;
-					while (!pits.get(pitNo).isEmpty()) {
-
-						// Get the current pit number
-						int currentPitNo = (pitNo + ++i) % 14;
-
-						// Make sure not to sow a stone in other player's Mancala
-						if (currentPitNo == 13)
-							continue;
-
-						// Add a stone in the current pit
-						// pits[currentPitNo]++;
-						this.stones[pits.get(pitNo).getFirst()] = currentPitNo;
-						pits.get(currentPitNo).add(pits.get(pitNo).pop());
-
-						// Check which pit the last stone is in
-						if (i == stones) {
-
-							// If the stone is NOT in its Mancala, switch player turn
-							if (currentPitNo != 6) {
-								changePlayer();
-							}
-
-							// Check if the last stone is being placed on the empty pit ON player's side. If
-							// so, get your stone and all the stones on the other side to your Mancala
-							// if (pits[currentPitNo] == 0 && currentPitNo < 6) {
-							if (pits.get(currentPitNo).size() == 1 && currentPitNo < 6) {
-								// pits[6] += pits[12 - currentPitNo] + 1;
-								// pits[12 - currentPitNo] = 0;
-								// pits[currentPitNo] = 0;
-								for (int j = 0; j < pits.get(12 - currentPitNo).size(); j++)
-									this.stones[pits.get(12 - currentPitNo).get(j)] = 6;
-								pits.get(6).addAll(pits.get(12 - currentPitNo));
-								pits.get(12 - currentPitNo).clear();
-								this.stones[pits.get(currentPitNo).getFirst()] = 6;
-								pits.get(6).add(pits.get(currentPitNo).pop());
-							}
-
-						}
-
-					}
-
-				}
-
-				return;
+				sowSubroutine(pitNo, 6, 13);
+				break;
 
 			// If it's player B's turn
 			case 'B':
+				sowSubroutine(pitNo, 13, 6);
 
-				// Player A only can click on pits 7 to 12
-				if (pitNo > 6) {
+			}
 
-					// stones = pits[pitNo];
-					stones = pits.get(pitNo).size();
+	}
 
-					// Empty the sowed pit
-					// pits[pitNo] = 0;
+	/**
+	 * To allow sowing on specific pits for current player.
+	 * 
+	 * @param pitNoMancalaCurrentPlayer
+	 * @param pitNoMancalaOppositingPlayer
+	 */
+	public void sowSubroutine(int pitNo, int pitNoMancalaCurrentPlayer, int pitNoMancalaOppositingPlayer) {
 
-					// Sow one stone in each pit at correct pit sequence
-					// for (int i = 1; i <= stones; i++) {
-					int i = 0;
-					while (!pits.get(pitNo).isEmpty()) {
+		// Player A only can click on pits 0 to 5
+		if (pitNo >= pitNoMancalaCurrentPlayer - 6 && pitNo < pitNoMancalaCurrentPlayer) {
 
-						// Get the current pit number
-						int currentPitNo = (pitNo + ++i) % 14;
+			// stones = pits[pitNo];
+			int stones = pits.get(pitNo).size();
 
-						// Make sure not to sow a stone in other player's Mancala
-						if (currentPitNo == 6)
-							continue;
+			// Sow one stone in each pit at correct pit sequence
+			int i = 0;
+			while (!pits.get(pitNo).isEmpty()) {
 
-						// Add a stone in the current pit
-						// pits[currentPitNo]++;
-						this.stones[pits.get(pitNo).getFirst()] = currentPitNo;
-						pits.get(currentPitNo).add(pits.get(pitNo).pop());
+				// Get the current pit number
+				int currentPitNo = (pitNo + ++i) % 14;
 
-						// Check which pit the last stone is in
-						if (i == stones) {
+				// Make sure not to sow a stone in other player's Mancala
+				if (currentPitNo == pitNoMancalaOppositingPlayer)
+					continue;
 
-							// If the stone is NOT in its Mancala, switch player turn
-							if (currentPitNo != 13) {
-								changePlayer();
-							}
+				// Add a stone in the current pit
+				this.stones[pits.get(pitNo).getFirst()] = currentPitNo;
+				pits.get(currentPitNo).add(pits.get(pitNo).pop());
 
-							// Check if the last stone is being placed on the empty pit ON player's side. If
-							// so, get your stone and all the stones on the other side to your Mancala
-							// if (pits[currentPitNo] == 0 && currentPitNo > 6 && currentPitNo < 13) {
-							if (pits.get(currentPitNo).size() == 1 && currentPitNo > 6 && currentPitNo < 13) {
-								// pits[13] += pits[12 - currentPitNo];
-								// pits[12 - currentPitNo] = 0;
-								// pits[currentPitNo] = 0;
-								for (int j = 0; j < pits.get(12 - currentPitNo).size(); j++)
-									this.stones[pits.get(12 - currentPitNo).get(j)] = 13;
-								pits.get(13).addAll(pits.get(12 - currentPitNo));
-								pits.get(12 - currentPitNo).clear();
-								this.stones[pits.get(currentPitNo).getFirst()] = 13;
-								pits.get(13).add(pits.get(currentPitNo).pop());
-							}
+				// Check which pit the last stone is in
+				if (i == stones) {
 
-						}
+					// If the stone is in its Mancala current player gets other turn
+					if (currentPitNo == pitNoMancalaCurrentPlayer)
+						return;
+					// Otherwise, switch player turn
+					else 
+						changePlayer();
 
+					// Check if the last stone is being placed on the empty pit ON player's side. If
+					// so, get your stone and all the stones on the other side to your Mancala
+					if (pits.get(currentPitNo).size() == 1 && pits.get(12 - currentPitNo).size() != 0
+							&& currentPitNo >= pitNoMancalaCurrentPlayer - 6
+							&& currentPitNo < pitNoMancalaCurrentPlayer) {
+						for (int j = 0; j < pits.get(12 - currentPitNo).size(); j++)
+							this.stones[pits.get(12 - currentPitNo).get(j)] = pitNoMancalaCurrentPlayer;
+						pits.get(pitNoMancalaCurrentPlayer).addAll(pits.get(12 - currentPitNo));
+						pits.get(12 - currentPitNo).clear();
+						this.stones[pits.get(currentPitNo).getFirst()] = pitNoMancalaCurrentPlayer;
+						pits.get(pitNoMancalaCurrentPlayer).add(pits.get(currentPitNo).pop());
 					}
 
 				}
 
-				return;
-
 			}
+
+		}
 
 	}
 
