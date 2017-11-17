@@ -45,6 +45,10 @@ public class MancalaModel {
 		this.playerTurn = playerTurn;
 	}
 
+	public char getPlayerTurn() {
+		return playerTurn;
+	}
+
 	/**
 	 * Empty all stones in each pit.
 	 */

@@ -24,6 +24,7 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 			new Color(0x4D4D4D) };
 	private Timer timer;
 	private final int DELAY = 1;
+	private boolean gameStarted;
 
 	public MancalaBoardPanel(int width, int height, MancalaModel model) {
 
@@ -33,6 +34,7 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 		int pad = height / 20;
 		stoneSize = 30;
 		pits = new MancalaPitGraphics[14];
+		gameStarted = false;
 		for (int i = 0; i < 14; i++)
 			pits[i] = new MancalaPitGraphics();
 
@@ -90,7 +92,7 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 		addMouseListener(this);
 
 		// Make all drawing be done in memory first
-//		setDoubleBuffered(true);
+		setDoubleBuffered(true);
 
 		// Timer for animation
 		timer = new Timer(DELAY, this);
@@ -107,6 +109,10 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 		g2.setColor(new Color(176, 136, 87));
 		g2.draw(board);
 
+		// Pits on current player border should thicken on that player's turn
+		float thickness = 3;
+		Stroke oldStroke = g2.getStroke();
+		
 		// Color the board
 		g2.fill(board);
 		g2.setColor(new Color(142, 106, 63));
@@ -124,10 +130,17 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 			g2.draw(board);
 			g2.draw(pits[6].getOuterBound());
 			g2.draw(pits[13].getOuterBound());
-			for (int i = 0; i < 13; i++) {
-				if (i == 6)
-					continue;
+			for (int i = 0; i < 6; i++) {
+				if (gameStarted && !isBoardStillAnimating() && model.getPlayerTurn() == 'A')
+					g2.setStroke(new BasicStroke(thickness));
 				g2.draw(pits[i].getOuterBound());
+				g2.setStroke(oldStroke);
+			}
+			for (int i = 7; i < 13; i++) {
+				if (gameStarted && !isBoardStillAnimating() && model.getPlayerTurn() == 'B')
+					g2.setStroke(new BasicStroke(thickness));
+				g2.draw(pits[i].getOuterBound());
+				g2.setStroke(oldStroke);
 			}
 		}
 
@@ -303,9 +316,11 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
+
+		// Then get the pit number the user clicked on and sow it
 		Point point = e.getPoint();
 		for (int i = 0; i < 14; i++)
-			if (pits[i].getOuterBound().contains(point)) {
+			if (!isBoardStillAnimating() && pits[i].getOuterBound().contains(point)) {
 				// System.out.printf("Pit %d clicked.%n%n", i);
 				model.sow(i);
 				System.out.println(model);
@@ -324,7 +339,7 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 		for (MancalaStoneGraphics stone : stones.values()) {
 
 			// Check if any of the stones are animating
-			if (stone.getIsAnimating()) {
+			if (stone.isAnimating()) {
 				if (stone.getDiffX() * (stone.getRandX() - stone.getNextX()) > 0
 						&& stone.getDiffY() * (stone.getRandY() - stone.getNextY()) > 0) {
 					stone.setX(stone.getNextX());
@@ -335,7 +350,7 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 					// Put the stones in its final position
 					stone.setX(stone.getRandX());
 					stone.setY(stone.getRandY());
-					stone.setIsAnimating(false);
+					stone.setAnimating(false);
 				}
 				repaint();
 			}
@@ -343,5 +358,26 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 		}
 
 	}
+	
+	/**
+	 * Check if the stones are still moving around.
+	 */
+	public boolean isBoardStillAnimating() {
+		for (MancalaStoneGraphics stone : stones.values())
+			if (stone.isAnimating())
+				return true;
+		return false;
+	}
+
+	// Getters and Setters
+
+	public boolean isGameStarted() {
+		return gameStarted;
+	}
+
+	public void setGameStarted(boolean gameStarted) {
+		this.gameStarted = gameStarted;
+	}
+	
 
 }

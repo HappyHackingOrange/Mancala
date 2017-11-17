@@ -98,11 +98,11 @@ public class MancalaStoneGraphics {
 		this.pit = pit;
 	}
 
-	public boolean getIsAnimating() {
+	public boolean isAnimating() {
 		return isAnimating;
 	}
 
-	public void setIsAnimating(boolean isAnimating) {
+	public void setAnimating(boolean isAnimating) {
 		this.isAnimating = isAnimating;
 	}
 
@@ -189,7 +189,7 @@ public class MancalaStoneGraphics {
 		diffY = randY - y;
 
 		// Break up the x and y components of the translate path into segments
-		double divisor = 25;
+		double divisor = 12;
 		segmentX = diffX / divisor;
 		segmentY = diffY / divisor;
 

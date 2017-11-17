@@ -48,6 +48,7 @@ public class MancalaView extends JFrame {
 			board.clearStones();
 			board.populateStones(model.getPits());
 			board.randomizeAllPositions();
+			board.setGameStarted(true);
 			board.repaint();
 		});
 		buttonUndo = new Button("Undo");
