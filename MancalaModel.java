@@ -13,6 +13,7 @@ public class MancalaModel {
 	private ArrayList<LinkedList<Integer>> pitsUndo;
 	private int[] stones; // Each stone tells which pit they are in
 	private char playerTurn;
+	private Queue<Pair> stoneSequence; // For animating one stone at a time
 
 	/**
 	 * Constructor
@@ -24,6 +25,7 @@ public class MancalaModel {
 		for (int i = 0; i < 14; i++)
 			pits.add(new LinkedList<>());
 		playerTurn = 'A';
+		stoneSequence = new LinkedList<>();
 
 	}
 
@@ -47,6 +49,10 @@ public class MancalaModel {
 
 	public char getPlayerTurn() {
 		return playerTurn;
+	}
+
+	public Queue<Pair> getStoneSequence() {
+		return stoneSequence;
 	}
 
 	/**
@@ -129,6 +135,7 @@ public class MancalaModel {
 
 				// Add a stone in the current pit
 				this.stones[pits.get(pitNo).getFirst()] = currentPitNo;
+				stoneSequence.add(new Pair(pits.get(pitNo).getFirst(), currentPitNo));
 				pits.get(currentPitNo).add(pits.get(pitNo).pop());
 
 				// Check which pit the last stone is in
@@ -138,7 +145,7 @@ public class MancalaModel {
 					if (currentPitNo == pitNoMancalaCurrentPlayer)
 						return;
 					// Otherwise, switch player turn
-					else 
+					else
 						changePlayer();
 
 					// Check if the last stone is being placed on the empty pit ON player's side. If
@@ -151,6 +158,7 @@ public class MancalaModel {
 						pits.get(pitNoMancalaCurrentPlayer).addAll(pits.get(12 - currentPitNo));
 						pits.get(12 - currentPitNo).clear();
 						this.stones[pits.get(currentPitNo).getFirst()] = pitNoMancalaCurrentPlayer;
+						stoneSequence.add(new Pair(pits.get(currentPitNo).getFirst(), pitNoMancalaCurrentPlayer));
 						pits.get(pitNoMancalaCurrentPlayer).add(pits.get(currentPitNo).pop());
 					}
 
@@ -198,6 +206,32 @@ public class MancalaModel {
 		sb.append("\n\n");
 		sb.append(String.format("Player's turn: %c\n", playerTurn));
 		return sb.toString();
+	}
+
+	/**
+	 * Define a 2-tuple (pair) to hold stone and pair values
+	 * 
+	 * @author Vincent Stowbunenko
+	 *
+	 */
+	public class Pair {
+
+		private final int left;
+		private final int right;
+
+		public Pair(int left, int right) {
+			this.left = left;
+			this.right = right;
+		}
+
+		public int getLeft() {
+			return left;
+		}
+
+		public int getRight() {
+			return right;
+		}
+
 	}
 
 	/**

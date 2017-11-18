@@ -16,6 +16,7 @@ public class MancalaStoneGraphics {
 	private int pit;
 
 	// For animation
+//	private boolean isWaitingToAnimate;
 	private boolean isAnimating;
 	private double randX;
 	private double randY;
@@ -49,6 +50,7 @@ public class MancalaStoneGraphics {
 		y = 0;
 		this.color = color;
 		this.pit = pit;
+//		isWaitingToAnimate = false;
 		isAnimating = false;
 	}
 
@@ -97,6 +99,14 @@ public class MancalaStoneGraphics {
 	public void setPit(int pit) {
 		this.pit = pit;
 	}
+
+//	public boolean isWaitingToAnimate() {
+//		return isWaitingToAnimate;
+//	}
+//
+//	public void setWaitingToAnimate(boolean isWaitingToAnimate) {
+//		this.isWaitingToAnimate = isWaitingToAnimate;
+//	}
 
 	public boolean isAnimating() {
 		return isAnimating;
@@ -179,7 +189,7 @@ public class MancalaStoneGraphics {
 	 * @param randY
 	 *            the final y position to translate to
 	 */
-	public void startAnimating(double randX, double randY) {
+	public void queueAnimating(double randX, double randY) {
 
 		this.randX = randX;
 		this.randY = randY;
@@ -196,9 +206,6 @@ public class MancalaStoneGraphics {
 		// Translate the stones
 		nextX = x + segmentX;
 		nextY = y + segmentY;
-
-		// Turn on the animation flag
-		isAnimating = true;
 
 	}
 

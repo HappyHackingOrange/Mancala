@@ -11,7 +11,7 @@ public class MancalaPitGraphics {
 
 	private RoundRectangle2D outerBound;
 	private RoundRectangle2D innerBound;
-	LinkedList<MancalaStoneGraphics> stones;
+	private LinkedList<MancalaStoneGraphics> stones;
 	
 	public MancalaPitGraphics() {
 		stones = new LinkedList<>();

@@ -12,7 +12,7 @@ import javax.swing.Timer;
  * @author Vincent Stowbunenko
  *
  */
-public class MancalaBoardPanel extends JPanel implements MouseListener, ActionListener {
+public class MancalaBoardPanel extends JPanel implements MouseListener, MouseMotionListener, ActionListener {
 
 	private MancalaModel model;
 	private RoundRectangle2D board;
@@ -25,6 +25,7 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 	private Timer timer;
 	private final int DELAY = 1;
 	private boolean gameStarted;
+	private int pitNoHighlight;
 
 	public MancalaBoardPanel(int width, int height, MancalaModel model) {
 
@@ -35,6 +36,7 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 		stoneSize = 30;
 		pits = new MancalaPitGraphics[14];
 		gameStarted = false;
+		pitNoHighlight = -1;
 		for (int i = 0; i < 14; i++)
 			pits[i] = new MancalaPitGraphics();
 
@@ -90,6 +92,7 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 
 		// Listen for any mouse actions
 		addMouseListener(this);
+		addMouseMotionListener(this);
 
 		// Make all drawing be done in memory first
 		setDoubleBuffered(true);
@@ -112,16 +115,25 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 		// Pits on current player border should thicken on that player's turn
 		float thickness = 3;
 		Stroke oldStroke = g2.getStroke();
-		
+
 		// Color the board
 		g2.fill(board);
 		g2.setColor(new Color(142, 106, 63));
 		g2.fill(pits[6].getOuterBound());
 		g2.fill(pits[13].getOuterBound());
-		for (int i = 0; i < 13; i++) {
-			if (i == 6)
-				continue;
+		for (int i = 0; i < 6; i++) {
+			if (gameStarted && !isBoardStillAnimating() && model.getPlayerTurn() == 'A' && pitNoHighlight == i
+					&& !pits[i].getStones().isEmpty())
+				g2.setColor(new Color(117, 81, 38));
 			g2.fill(pits[i].getOuterBound());
+			g2.setColor(new Color(142, 106, 63));
+		}
+		for (int i = 7; i < 13; i++) {
+			if (gameStarted && !isBoardStillAnimating() && model.getPlayerTurn() == 'B' && pitNoHighlight == i
+					&& !pits[i].getStones().isEmpty())
+				g2.setColor(new Color(117, 81, 38));
+			g2.fill(pits[i].getOuterBound());
+			g2.setColor(new Color(142, 106, 63));
 		}
 
 		// Draw the outlines of the board
@@ -131,13 +143,15 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 			g2.draw(pits[6].getOuterBound());
 			g2.draw(pits[13].getOuterBound());
 			for (int i = 0; i < 6; i++) {
-				if (gameStarted && !isBoardStillAnimating() && model.getPlayerTurn() == 'A')
+				if (gameStarted && !isBoardStillAnimating() && model.getPlayerTurn() == 'A'
+						&& !pits[i].getStones().isEmpty())
 					g2.setStroke(new BasicStroke(thickness));
 				g2.draw(pits[i].getOuterBound());
 				g2.setStroke(oldStroke);
 			}
 			for (int i = 7; i < 13; i++) {
-				if (gameStarted && !isBoardStillAnimating() && model.getPlayerTurn() == 'B')
+				if (gameStarted && !isBoardStillAnimating() && model.getPlayerTurn() == 'B'
+						&& !pits[i].getStones().isEmpty())
 					g2.setStroke(new BasicStroke(thickness));
 				g2.draw(pits[i].getOuterBound());
 				g2.setStroke(oldStroke);
@@ -178,10 +192,12 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 		randY -= stoneSize / 2;
 
 		if (animate) {
-			stone.startAnimating(randX, randY);
+			stone.queueAnimating(randX, randY);
 		} else {
 			stone.setX(randX);
 			stone.setY(randY);
+			stone.setRandX(randX);
+			stone.setRandY(randY);
 		}
 
 	}
@@ -227,6 +243,18 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 	}
 
 	/**
+	 * Calculate distance between final positions of stones.
+	 * 
+	 * @param stone1
+	 * @param stone2
+	 * @return the distance between stones
+	 */
+	public double distanceFinal(MancalaStoneGraphics stone1, MancalaStoneGraphics stone2) {
+		return Math.sqrt(Math.pow(stone1.getRandX() - stone2.getRandX(), 2)
+				+ Math.pow(stone1.getRandY() - stone2.getRandY(), 2));
+	}
+
+	/**
 	 * Calculate distance between two points
 	 * 
 	 * @param x1
@@ -244,7 +272,7 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 	 */
 	public void clearStones() {
 		for (MancalaPitGraphics holeGraphics : pits)
-			holeGraphics.stones.clear();
+			holeGraphics.getStones().clear();
 	}
 
 	/**
@@ -257,7 +285,7 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 		for (int i = 0; i < pits.size(); i++)
 			for (int j = 0; j < pits.get(i).size(); j++) {
 				MancalaStoneGraphics msg = new MancalaStoneGraphics(colors[pits.get(i).get(j) % pits.get(i).size()], i);
-				this.pits[i].stones.add(msg);
+				this.pits[i].getStones().add(msg);
 				stones.put(pits.get(i).get(j), msg);
 			}
 
@@ -268,97 +296,98 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 	 * to make sure the stones are not too close to each other.
 	 */
 	public void updateStonePositions() {
-		if (model.getStones() != null)
-			for (int i = 0; i < model.getStones().length; i++) {
-				if (model.getStones()[i] != stones.get(i).getPit()) {
-					MancalaStoneGraphics stone1 = stones.get(i);
-					pits[model.getStones()[i]].getStones().add(stone1);
-					pits[stone1.getPit()].getStones().remove(stone1);
-					stone1.setPit(model.getStones()[i]);
-					// System.out.printf("Pit %d Position: (%f, %f), No of Stones: %d%n",
-					// stone1.getPit(), pits[stone1.getPit()].getInnerBound().getX(),
-					// pits[stone1.getPit()].getInnerBound().getY(),
-					// pits[stone1.getPit()].getStones().size());
-					boolean tooClose = true;
-					while (tooClose) {
-						randomizePosition(stone1, pits[stone1.getPit()].getInnerBound(), true);
-						tooClose = false;
-						for (int k = 0; k < pits[stone1.getPit()].getStones().size(); k++) {
-							MancalaStoneGraphics stone2 = pits[stone1.getPit()].getStones().get(k);
-							if (stone1 == stone2)
-								continue;
-							if (distance(stone1, stone2) < stoneSize / 2) {
-								tooClose = true;
-								break;
-							}
+
+		// First check to see if the model has any stones in the board...
+		if (model.getStones() != null) {
+
+			MancalaStoneGraphics stone1 = null;
+
+			// Check if there is a sequence from the model to animate the stones one at a
+			// time
+			if (!model.getStoneSequence().isEmpty()) {
+
+				// Get the stone number (i) and its graphics info
+				int i = model.getStoneSequence().peek().getLeft();
+				stone1 = stones.get(i);
+
+				// Remove the stone from the previous pit and put it in the next pit
+				pits[model.getStoneSequence().peek().getRight()].getStones().add(stone1);
+				pits[stone1.getPit()].getStones().remove(stone1);
+
+				// Update the stone's pit number
+				stone1.setPit(model.getStoneSequence().peek().getRight());
+
+				// Dequeue the stone from the queue
+				model.getStoneSequence().poll();
+
+				// Tell the stone to start animating
+				stone1.setAnimating(true);
+
+				// Randomize the stone position in its next pit while check to make sure that it
+				// is not too close to other pits
+				boolean tooClose = true;
+				while (tooClose) {
+					randomizePosition(stone1, pits[stone1.getPit()].getInnerBound(), true);
+					tooClose = false;
+					for (int k = 0; k < pits[stone1.getPit()].getStones().size(); k++) {
+						MancalaStoneGraphics stone2 = pits[stone1.getPit()].getStones().get(k);
+						if (stone1 == stone2)
+							continue;
+						if (distanceFinal(stone1, stone2) < stoneSize / 2) {
+							tooClose = true;
+							break;
 						}
 					}
 				}
 
 			}
-	}
 
-	@Override
-	public void mouseClicked(MouseEvent e) {
-	}
+			// Otherwise animate the rest of the stones at same time
+			else {
+				
+				// Go through each stone
+				for (int i = 0; i < model.getStones().length; i++) {
 
-	@Override
-	public void mouseEntered(MouseEvent e) {
-	}
+					// Check if the stone have not been updated yet
+					if (model.getStones()[i] != stones.get(i).getPit()) {
 
-	@Override
-	public void mouseExited(MouseEvent e) {
-	}
+						// Get the stone's graphic info
+						stone1 = stones.get(i);
 
-	@Override
-	public void mousePressed(MouseEvent e) {
-	}
+						// Remove the stone from the previous pit and put it in the next pit
+						pits[model.getStones()[i]].getStones().add(stone1);
+						pits[stone1.getPit()].getStones().remove(stone1);
 
-	@Override
-	public void mouseReleased(MouseEvent e) {
+						// Update the stone's pit number
+						stone1.setPit(model.getStones()[i]);
 
-		// Then get the pit number the user clicked on and sow it
-		Point point = e.getPoint();
-		for (int i = 0; i < 14; i++)
-			if (!isBoardStillAnimating() && pits[i].getOuterBound().contains(point)) {
-				// System.out.printf("Pit %d clicked.%n%n", i);
-				model.sow(i);
-				System.out.println(model);
-				// for (int j = 0; j < model.getStones().length; j++)
-				// System.out.printf("Stone %d is in pit %d%n", j, model.getStones()[j]);
-				updateStonePositions();
-				repaint();
-				break;
-			}
-	}
+						// Tell the stones to start animating
+						stone1.setAnimating(true);
 
-	@Override
-	public void actionPerformed(ActionEvent arg0) {
-		// TODO Auto-generated method stub
+						// Randomize the stone position in its next pit while check to make sure that it
+						// is not too close to other pits
+						boolean tooClose = true;
+						while (tooClose) {
+							randomizePosition(stone1, pits[stone1.getPit()].getInnerBound(), true);
+							tooClose = false;
+							for (int k = 0; k < pits[stone1.getPit()].getStones().size(); k++) {
+								MancalaStoneGraphics stone2 = pits[stone1.getPit()].getStones().get(k);
+								if (stone1 == stone2)
+									continue;
+								if (distanceFinal(stone1, stone2) < stoneSize / 2) {
+									tooClose = true;
+									break;
+								}
+							}
+						}
 
-		for (MancalaStoneGraphics stone : stones.values()) {
-
-			// Check if any of the stones are animating
-			if (stone.isAnimating()) {
-				if (stone.getDiffX() * (stone.getRandX() - stone.getNextX()) > 0
-						&& stone.getDiffY() * (stone.getRandY() - stone.getNextY()) > 0) {
-					stone.setX(stone.getNextX());
-					stone.setY(stone.getNextY());
-					stone.setNextX(stone.getNextX() + stone.getSegmentX());
-					stone.setNextY(stone.getNextY() + stone.getSegmentY());
-				} else {
-					// Put the stones in its final position
-					stone.setX(stone.getRandX());
-					stone.setY(stone.getRandY());
-					stone.setAnimating(false);
+					}
 				}
-				repaint();
 			}
 
 		}
-
 	}
-	
+
 	/**
 	 * Check if the stones are still moving around.
 	 */
@@ -378,6 +407,91 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, ActionLi
 	public void setGameStarted(boolean gameStarted) {
 		this.gameStarted = gameStarted;
 	}
-	
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+	}
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent event) {
+
+		// Then get the pit number the user clicked on and sow it
+		Point point = event.getPoint();
+		for (int i = 0; i < 14; i++)
+			if (!isBoardStillAnimating() && pits[i].getOuterBound().contains(point)) {
+				model.sow(i);
+				updateStonePositions();
+				repaint();
+				break;
+			}
+
+	}
+
+	@Override
+	public void mouseDragged(MouseEvent arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void mouseMoved(MouseEvent event) {
+		// TODO Auto-generated method stub
+		Point point = event.getPoint();
+		int pitNo = -1;
+		for (int i = 0; i < 14; i++) {
+			if (!isBoardStillAnimating() && pits[i].getOuterBound().contains(point)) {
+				pitNo = i;
+				break;
+			}
+		}
+		pitNoHighlight = pitNo;
+		repaint();
+
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+
+		for (Map.Entry<Integer, MancalaStoneGraphics> entry : stones.entrySet()) {
+			
+			int stoneNo = entry.getKey();
+			MancalaStoneGraphics stone = entry.getValue();
+
+			// Check if any of the stones are animating
+			if (stone.isAnimating()) {
+				if (stone.getDiffX() * (stone.getRandX() - stone.getNextX()) > 0
+						&& stone.getDiffY() * (stone.getRandY() - stone.getNextY()) > 0) {
+					stone.setX(stone.getNextX());
+					stone.setY(stone.getNextY());
+					stone.setNextX(stone.getNextX() + stone.getSegmentX());
+					stone.setNextY(stone.getNextY() + stone.getSegmentY());
+				} else {
+//					System.out.printf("Placed stone %d in pit %d.%n", stoneNo, stone.getPit());
+					// Put the stones in its final position
+					stone.setX(stone.getRandX());
+					stone.setY(stone.getRandY());
+					stone.setAnimating(false);
+					// stone.setWaitingToAnimate(false);
+//					if (isBoardStillAnimating())
+						updateStonePositions();
+				}
+				repaint();
+			}
+
+		}
+
+	}
 
 }
