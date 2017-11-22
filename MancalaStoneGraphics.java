@@ -16,7 +16,7 @@ public class MancalaStoneGraphics {
 	private int pit;
 
 	// For animation
-//	private boolean isWaitingToAnimate;
+	final double divisor = 24;
 	private boolean isAnimating;
 	private double randX;
 	private double randY;
@@ -29,16 +29,6 @@ public class MancalaStoneGraphics {
 
 	// Constructors
 
-	// /**
-	// * If nothing is specified, point starts at (0,0) and give it a random color
-	// */
-	// public MancalaStoneGraphics() {
-	// x = 0;
-	// y = 0;
-	// Random rand = new Random();
-	// color = new Color(rand.nextFloat(), rand.nextFloat(), rand.nextFloat());
-	// }
-
 	/**
 	 * Specify color and pit number for this stone
 	 * 
@@ -50,24 +40,11 @@ public class MancalaStoneGraphics {
 		y = 0;
 		this.color = color;
 		this.pit = pit;
-//		isWaitingToAnimate = false;
 		isAnimating = false;
 	}
 
-	// /**
-	// * If only point is specified, give it a random color
-	// *
-	// * @param x
-	// * @param y
-	// */
-	// public MancalaStoneGraphics(double x, double y) {
-	// this.x = x;
-	// this.y = y;
-	// Random rand = new Random();
-	// color = new Color(rand.nextFloat(), rand.nextFloat(), rand.nextFloat());
-	// }
-
 	// Getters and setters
+
 	public double getX() {
 		return x;
 	}
@@ -99,14 +76,6 @@ public class MancalaStoneGraphics {
 	public void setPit(int pit) {
 		this.pit = pit;
 	}
-
-//	public boolean isWaitingToAnimate() {
-//		return isWaitingToAnimate;
-//	}
-//
-//	public void setWaitingToAnimate(boolean isWaitingToAnimate) {
-//		this.isWaitingToAnimate = isWaitingToAnimate;
-//	}
 
 	public boolean isAnimating() {
 		return isAnimating;
@@ -199,7 +168,6 @@ public class MancalaStoneGraphics {
 		diffY = randY - y;
 
 		// Break up the x and y components of the translate path into segments
-		double divisor = 12;
 		segmentX = diffX / divisor;
 		segmentY = diffY / divisor;
 

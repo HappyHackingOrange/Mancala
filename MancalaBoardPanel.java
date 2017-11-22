@@ -23,7 +23,7 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, MouseMot
 	private Color[] colors = new Color[] { new Color(0xF16A70), new Color(0xB1D877), new Color(0x8CDCDA),
 			new Color(0x4D4D4D) };
 	private Timer timer;
-	private final int DELAY = 1;
+	private final int DELAY = 10;
 	private boolean gameStarted;
 	private int pitNoHighlight;
 
@@ -170,7 +170,7 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, MouseMot
 	}
 
 	/**
-	 * Place a stone in a random position in a hole.
+	 * Place a stone in a random position in a hole. Also has an option to whether animate this stone or not.
 	 * 
 	 * @param stone
 	 * @param shape
@@ -300,25 +300,20 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, MouseMot
 		// First check to see if the model has any stones in the board...
 		if (model.getStones() != null) {
 
-			MancalaStoneGraphics stone1 = null;
-
 			// Check if there is a sequence from the model to animate the stones one at a
 			// time
 			if (!model.getStoneSequence().isEmpty()) {
 
 				// Get the stone number (i) and its graphics info
 				int i = model.getStoneSequence().peek().getLeft();
-				stone1 = stones.get(i);
+				MancalaStoneGraphics stone1 = stones.get(i);
 
 				// Remove the stone from the previous pit and put it in the next pit
 				pits[model.getStoneSequence().peek().getRight()].getStones().add(stone1);
 				pits[stone1.getPit()].getStones().remove(stone1);
 
-				// Update the stone's pit number
-				stone1.setPit(model.getStoneSequence().peek().getRight());
-
-				// Dequeue the stone from the queue
-				model.getStoneSequence().poll();
+				// Update the stone's pit number and remove the stone from the queue
+				stone1.setPit(model.getStoneSequence().poll().getRight());
 
 				// Tell the stone to start animating
 				stone1.setAnimating(true);
@@ -344,7 +339,7 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, MouseMot
 
 			// Otherwise animate the rest of the stones at same time
 			else {
-				
+
 				// Go through each stone
 				for (int i = 0; i < model.getStones().length; i++) {
 
@@ -352,7 +347,7 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, MouseMot
 					if (model.getStones()[i] != stones.get(i).getPit()) {
 
 						// Get the stone's graphic info
-						stone1 = stones.get(i);
+						MancalaStoneGraphics stone1 = stones.get(i);
 
 						// Remove the stone from the previous pit and put it in the next pit
 						pits[model.getStones()[i]].getStones().add(stone1);
@@ -441,13 +436,10 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, MouseMot
 
 	@Override
 	public void mouseDragged(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void mouseMoved(MouseEvent event) {
-		// TODO Auto-generated method stub
 		Point point = event.getPoint();
 		int pitNo = -1;
 		for (int i = 0; i < 14; i++) {
@@ -465,8 +457,7 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, MouseMot
 	public void actionPerformed(ActionEvent arg0) {
 
 		for (Map.Entry<Integer, MancalaStoneGraphics> entry : stones.entrySet()) {
-			
-			int stoneNo = entry.getKey();
+
 			MancalaStoneGraphics stone = entry.getValue();
 
 			// Check if any of the stones are animating
@@ -478,14 +469,10 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, MouseMot
 					stone.setNextX(stone.getNextX() + stone.getSegmentX());
 					stone.setNextY(stone.getNextY() + stone.getSegmentY());
 				} else {
-//					System.out.printf("Placed stone %d in pit %d.%n", stoneNo, stone.getPit());
-					// Put the stones in its final position
 					stone.setX(stone.getRandX());
 					stone.setY(stone.getRandY());
 					stone.setAnimating(false);
-					// stone.setWaitingToAnimate(false);
-//					if (isBoardStillAnimating())
-						updateStonePositions();
+					updateStonePositions();
 				}
 				repaint();
 			}

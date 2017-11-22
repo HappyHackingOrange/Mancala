@@ -14,6 +14,7 @@ public class MancalaModel {
 	private int[] stones; // Each stone tells which pit they are in
 	private char playerTurn;
 	private Queue<Pair> stoneSequence; // For animating one stone at a time
+	private Set<Stack<Pair>> solutions;
 
 	/**
 	 * Constructor
@@ -26,6 +27,7 @@ public class MancalaModel {
 			pits.add(new LinkedList<>());
 		playerTurn = 'A';
 		stoneSequence = new LinkedList<>();
+		solutions = new HashSet<>();
 
 	}
 
@@ -63,13 +65,14 @@ public class MancalaModel {
 		for (int i = 0; i < 14; i++)
 			// pits[i] = 0;
 			pits.get(i).clear();
+		stoneSequence.clear();
 
 	}
 
 	/**
 	 * Add initial number of stones to each small pits
 	 */
-	public void populateStones(int initStones) {
+	public void populatePits(int initStones) {
 
 		stones = new int[initStones * 12];
 		int counter = 0;
@@ -130,8 +133,10 @@ public class MancalaModel {
 				int currentPitNo = (pitNo + ++i) % 14;
 
 				// Make sure not to sow a stone in other player's Mancala
-				if (currentPitNo == pitNoMancalaOppositingPlayer)
+				if (currentPitNo == pitNoMancalaOppositingPlayer) {
+					stones++;
 					continue;
+				}
 
 				// Add a stone in the current pit
 				this.stones[pits.get(pitNo).getFirst()] = currentPitNo;
@@ -158,7 +163,6 @@ public class MancalaModel {
 						pits.get(pitNoMancalaCurrentPlayer).addAll(pits.get(12 - currentPitNo));
 						pits.get(12 - currentPitNo).clear();
 						this.stones[pits.get(currentPitNo).getFirst()] = pitNoMancalaCurrentPlayer;
-						stoneSequence.add(new Pair(pits.get(currentPitNo).getFirst(), pitNoMancalaCurrentPlayer));
 						pits.get(pitNoMancalaCurrentPlayer).add(pits.get(currentPitNo).pop());
 					}
 
@@ -185,31 +189,153 @@ public class MancalaModel {
 	}
 
 	/**
+	 * Use depth-first search to see if it is possible to end a game with one
+	 * Mancala containing all stones.
+	 * 
+	 * @param initStones
+	 */
+	public void dfs(int initStones) {
+		Stack<Pair> stack = new Stack<Pair>();
+		Stack<Pair> sequence = new Stack<Pair>();
+		Pair current;
+		boolean gameEnded;
+
+		for (int i = 0; i < 6; i++) {
+			emptyPits();
+			populatePits(initStones);
+			playerTurn = 'A';
+			stack.add(new Pair(0, i));
+			sequence.add(new Pair(0, i));
+			while (!stack.isEmpty()) {
+
+				current = stack.pop();
+				while (!sequence.isEmpty() && sequence.peek().left >= current.left)
+					sequence.pop();
+				sequence.push(current);
+
+				emptyPits();
+				populatePits(initStones);
+				playerTurn = 'A';
+				for (Pair pitNo : sequence)
+					sow(pitNo.right);
+
+				gameEnded = checkIfGameEnded();
+				if (gameEnded && (pits.get(6).isEmpty() || pits.get(13).isEmpty())) {
+					solutions.add((Stack<Pair>) sequence.clone());
+					// for (Pair pitNo : sequence)
+					// System.out.printf("%d:%d ", pitNo.left, pitNo.right);
+					// System.out.println();
+				}
+
+				if (gameEnded || !pits.get(6).isEmpty() && !pits.get(13).isEmpty()) {
+					for (Pair pitNo : sequence)
+						System.out.printf("%d:%d ", pitNo.left, pitNo.right);
+					System.out.println();
+				}
+
+				if (!gameEnded && (pits.get(6).isEmpty() || pits.get(13).isEmpty()))
+					stack.addAll(getSowablePits(current.left + 1));
+
+			}
+
+		}
+	}
+
+	/**
+	 * Get a list of sowable pits for current player.
+	 * 
+	 * @return the list of sowable pits.
+	 */
+	public LinkedList<Pair> getSowablePits(int turn) {
+		LinkedList<Pair> queue = new LinkedList<>();
+		switch (playerTurn) {
+		case ('A'):
+			for (int i = 5; i >= 0; i--)
+				if (!pits.get(i).isEmpty())
+					queue.add(new Pair(turn, i));
+			return queue;
+		case ('B'):
+			for (int i = 12; i >= 7; i--)
+				if (!pits.get(i).isEmpty())
+					queue.add(new Pair(turn, i));
+			return queue;
+		}
+		return null;
+	}
+
+	/**
+	 * Check if the game has ended by checking to see if one side has no more
+	 * stones. If so, place all the remaining stones from the other side to its
+	 * Mancala.
+	 * 
+	 * @return whether if game has ended or not
+	 */
+	public boolean checkIfGameEnded() {
+
+		// Check if side A is empty
+		boolean isSideAEmpty = true;
+		for (int i = 0; i < 6; i++) {
+			if (!pits.get(i).isEmpty()) {
+				isSideAEmpty = false;
+				break;
+			}
+		}
+		// Check if side B is empty
+		boolean isSideBEmpty = true;
+		for (int i = 7; i < 13; i++) {
+			if (!pits.get(i).isEmpty()) {
+				isSideBEmpty = false;
+				break;
+			}
+		}
+
+		// If side A is empty, place remaining stones to Mancala B
+		if (!isSideAEmpty && isSideBEmpty) {
+			for (int i = 0; i < 6; i++) {
+				pits.get(6).addAll(pits.get(i));
+				pits.get(i).clear();
+			}
+			return true;
+		}
+
+		// If side B is empty, place remaining stones to Mancala A
+		if (isSideAEmpty && !isSideBEmpty) {
+			for (int i = 7; i < 13; i++) {
+				pits.get(13).addAll(pits.get(i));
+				pits.get(i).clear();
+			}
+			return true;
+		}
+
+		if (isSideAEmpty && isSideBEmpty)
+			return true;
+
+		return false;
+
+	}
+
+	/**
 	 * Produces a String output of the current numbers of stones in each pit
 	 */
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder("   ");
 		for (int i = 12; i > 6; i--)
-			// sb.append(String.format("%3d", pits[i]));
 			sb.append(String.format("%3d", pits.get(i).size()));
 		sb.append('\n');
-		// sb.append(String.format("%3d", pits[13]));
 		sb.append(String.format("%3d", pits.get(13).size()));
 		sb.append(String.format("%0" + 18 + "d", 0).replace("0", " "));
-		// sb.append(String.format("%3d", pits[6]));
 		sb.append(String.format("%3d", pits.get(6).size()));
 		sb.append("\n   ");
 		for (int i = 0; i < 6; i++)
-			// sb.append(String.format("%3d", pits[i]));
 			sb.append(String.format("%3d", pits.get(i).size()));
-		sb.append("\n\n");
-		sb.append(String.format("Player's turn: %c\n", playerTurn));
+		sb.append("\n");
+//		sb.append(String.format("\nPlayer's turn: %c\n", playerTurn));
 		return sb.toString();
 	}
 
 	/**
-	 * Define a 2-tuple (pair) to hold stone and pair values
+	 * Define a 2-tuple (pair) to store two pieces of data.
 	 * 
 	 * @author Vincent Stowbunenko
 	 *
@@ -232,32 +358,25 @@ public class MancalaModel {
 			return right;
 		}
 
+		@Override
+		public boolean equals(Object obj) {
+			if (!(obj instanceof Pair))
+				return false;
+			Pair pair = (Pair) obj;
+			return this.left == pair.getLeft() && this.right == pair.getRight();
+		}
+
 	}
 
-	/**
-	 * Test the methods in this class
-	 * 
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		MancalaModel model = new MancalaModel();
-		System.out.println(model.toString());
-		model.populateStones(4);
-		System.out.println(model.toString());
-		model.sow(4);
-		System.out.println(model.toString());
-		model.sow(6);
-		System.out.println(model.toString());
-		model.sow(7);
-		System.out.println(model.toString());
-		model.sow(0);
-		System.out.println(model.toString());
-		model.sow(0);
-		System.out.println(model.toString());
-		model.sow(8);
-		System.out.println(model.toString());
-		model.sow(1);
-		System.out.println(model.toString());
-	}
+//	public static void main(String[] args) {
+//		MancalaModel model = new MancalaModel();
+//		model.dfs(3);
+//		System.out.println("List of solutions:");
+//		for (Stack<Pair> sequence : model.solutions) {
+//			for (Pair pitNo : sequence)
+//				System.out.printf("%d:%d ", pitNo.left, pitNo.right);
+//		System.out.println();
+//		}
+//	}
 
 }

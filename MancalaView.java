@@ -44,7 +44,7 @@ public class MancalaView extends JFrame {
 		buttonStart.addActionListener(event -> {
 			model.emptyPits();
 			model.setPlayerTurn('A');
-			model.populateStones(Integer.parseInt(bg.getSelection().getActionCommand()));
+			model.populatePits(Integer.parseInt(bg.getSelection().getActionCommand()));
 			board.clearStones();
 			board.populateStones(model.getPits());
 			board.randomizeAllPositions();
