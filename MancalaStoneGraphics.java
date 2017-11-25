@@ -13,7 +13,7 @@ public class MancalaStoneGraphics {
 	private double x;
 	private double y;
 	private Color color;
-	private int pit;
+	private Pit pit;
 
 	// For animation
 	final double divisor = 24;
@@ -35,7 +35,7 @@ public class MancalaStoneGraphics {
 	 * @param color
 	 * @param pit
 	 */
-	public MancalaStoneGraphics(Color color, int pit) {
+	public MancalaStoneGraphics(Color color, Pit pit) {
 		x = 0;
 		y = 0;
 		this.color = color;
@@ -69,11 +69,11 @@ public class MancalaStoneGraphics {
 		this.color = color;
 	}
 
-	public int getPit() {
+	public Pit getPit() {
 		return pit;
 	}
 
-	public void setPit(int pit) {
+	public void setPit(Pit pit) {
 		this.pit = pit;
 	}
 

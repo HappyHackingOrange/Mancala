@@ -22,17 +22,24 @@ public class MancalaModel {
 		gameTree = new DefaultTreeModel(root);
 	}
 
+	// Getters and Setters
+
+	public MancalaGameState getState() {
+		return state;
+	}
+
 	/**
 	 * Use depth-first search to build a game tree of all possible Mancala moves to
 	 * be used with minmax algorithm to find best moves.
 	 * 
-	 * @param initStones
+	 * @param root
+	 *            the root node to grow a game tree.
 	 */
 	public void dfs(DefaultMutableTreeNode root) {
 
 		Stack<DefaultMutableTreeNode> stack = new Stack<>();
 		stack.push(root);
-		
+
 		int gameNumber = 1;
 		System.out.printf("Starting game %d... %n", gameNumber);
 
@@ -48,7 +55,9 @@ public class MancalaModel {
 
 				for (int i = 1; i < path.length; i++) {
 					// System.out.printf("%s ", ((MancalaGameState) path[i]).getSowedPit());
-					System.out.printf("Turn %d: Player %s picked pit %s.%n%n", i, ((MancalaGameState) path[i-1]).getPlayerTurn(), ((MancalaGameState) path[i]).getSowedPit());
+					System.out.printf("Turn %d: Player %s picked pit %s.%n%n", i,
+							((MancalaGameState) path[i - 1]).getPlayerTurn(),
+							((MancalaGameState) path[i]).getSowedPit());
 					System.out.println(path[i]);
 				}
 
@@ -72,7 +81,7 @@ public class MancalaModel {
 
 			for (int index = 0; index < moves.length; index++) {
 				MancalaGameState childState = new MancalaGameState(parentState);
-				childState.sow((Pit) moves[index]);
+				childState.sow((Pit) moves[moves.length - index - 1]);
 				childState.checkIfGameEnded();
 				DefaultMutableTreeNode newChild = new DefaultMutableTreeNode(childState);
 				gameTree.insertNodeInto(newChild, parent, index);
