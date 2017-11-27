@@ -6,14 +6,24 @@
  */
 public class Stone {
 
-	private Pit pit;
+	// Instance variables
+//	private Pit pit;
 
-	public Pit getPit() {
-		return pit;
-	}
+	// Constructor
+//	public Stone() {
+//	}
 
-	public void setPit(Pit pit) {
-		this.pit = pit;
-	}
+	// Copy-constructor
+//	Stone(Stone stone) {
+//		pit = stone.pit;
+//	}
+
+//	public Pit getPit() {
+//		return pit;
+//	}
+
+//	public void setPit(Pit pit) {
+//		this.pit = pit;
+//	}
 
 }

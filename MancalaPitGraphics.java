@@ -9,32 +9,51 @@ import java.util.*;
  */
 public class MancalaPitGraphics {
 
-	private RoundRectangle2D outerBound;
-	private RoundRectangle2D innerBound;
-	private LinkedList<MancalaStoneGraphics> stones;
-	
+	// Instance variables
+	private RectangularShape outerBound;
+	private RectangularShape innerBound;
+	private LinkedList<Stone> stoneList;
+
+	// Constructor
 	public MancalaPitGraphics() {
-		stones = new LinkedList<>();
+		stoneList = new LinkedList<>();
 	}
 	
-	public RoundRectangle2D getOuterBound() {
+	// Copy-constructor
+	public MancalaPitGraphics(MancalaPitGraphics pitGraphics) {
+		outerBound = pitGraphics.outerBound;
+		innerBound = pitGraphics.innerBound;
+		stoneList = new LinkedList<>(pitGraphics.stoneList);
+//		stoneList = new LinkedList<>();
+//		for (Stone stone : pitGraphics.stoneList)
+//			stoneList.add(stone);
+			
+	}
+
+	// Getters and setters
+
+	public RectangularShape getOuterBound() {
 		return outerBound;
 	}
-	public void setOuterBound(RoundRectangle2D outerBound) {
+
+	public void setOuterBound(RectangularShape outerBound) {
 		this.outerBound = outerBound;
 	}
-	public RoundRectangle2D getInnerBound() {
+
+	public RectangularShape getInnerBound() {
 		return innerBound;
 	}
-	public void setInnerBound(RoundRectangle2D innerBound) {
+
+	public void setInnerBound(RectangularShape innerBound) {
 		this.innerBound = innerBound;
 	}
-	public LinkedList<MancalaStoneGraphics> getStones() {
-		return stones;
+
+	public LinkedList<Stone> getStoneList() {
+		return stoneList;
 	}
-	public void setStones(LinkedList<MancalaStoneGraphics> stones) {
-		this.stones = stones;
+
+	public void setStoneList(LinkedList<Stone> stoneList) {
+		this.stoneList = stoneList;
 	}
-	
 
 }

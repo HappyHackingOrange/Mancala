@@ -1,28 +1,44 @@
 import java.awt.*;
+import java.awt.event.*;
+
 import javax.swing.*;
+import javax.swing.border.*;
 
 /**
- * Displays the GUI frame of a Mancala board.
- * The action listeners in this are the "controllers" of the MVC model.
+ * Displays the GUI frame of a Mancala board. The action listeners in this are
+ * the "controllers" of the MVC model.
  * 
  * @author Vincent Stowbunenko
  *
  */
 public class MancalaView extends JFrame {
 
-	private MancalaModel model;
+	// Constants
+	private static final Font fontStatus = new Font("SansSerif", Font.BOLD, 36);
+	private static final Border blackline = BorderFactory.createLineBorder(Color.black);
+
+	// Instance Variables
 	private MancalaBoardPanel board;
-	private Button buttonStart;
-	private Button buttonUndo;
-	ButtonGroup bg;
+	private JButton buttonStart;
+	private JButton buttonUndo;
+	private ButtonGroup bg;
+	private MancalaBoardFormatter boardFormatter;
 
+	// Constructor
 	public MancalaView(MancalaModel model) {
-		
-		// Connect the view to the model
-		this.model = model;
 
-		// A panel with just radio buttons
-		JPanel radioPanel = new JPanel();
+		// Set up default strategy patterns
+		boardFormatter = new MancalaBoardStandard();
+
+		// JPanel content = new JPanel();
+		Box content = Box.createHorizontalBox();
+
+		// Panel with radio buttons to ask user for initial number of stones per pit
+		JLabel initStoneLabel = new JLabel("Initial number of stones:");
+		Box initStoneLabelBox = Box.createHorizontalBox();
+		initStoneLabelBox.add(initStoneLabel);
+		initStoneLabelBox.add(Box.createHorizontalGlue());
+		Box radioBox = Box.createHorizontalBox();
 		JRadioButton rbutton1 = new JRadioButton("3", true);
 		rbutton1.setActionCommand(rbutton1.getText());
 		JRadioButton rbutton2 = new JRadioButton("4");
@@ -30,62 +46,167 @@ public class MancalaView extends JFrame {
 		bg = new ButtonGroup();
 		bg.add(rbutton1);
 		bg.add(rbutton2);
-		radioPanel.add(rbutton1);
-		radioPanel.add(rbutton2);
+		radioBox.add(Box.createHorizontalGlue());
+		radioBox.add(rbutton1);
+		radioBox.add(Box.createHorizontalGlue());
+		radioBox.add(rbutton2);
+		radioBox.add(Box.createHorizontalGlue());
 
-		// Top right panel, merging radio buttons with its label
-		JPanel topRightPanel = new JPanel(new BorderLayout());
-		topRightPanel.add(new Label("Initial number of stones:"), BorderLayout.NORTH);
-		topRightPanel.add(radioPanel, BorderLayout.SOUTH);
+		Box initStoneBox = Box.createVerticalBox();
+		initStoneBox.add(initStoneLabelBox);
+		initStoneBox.add(radioBox);
+		initStoneBox.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-		// Top left panel, just all push buttons
-		JPanel topLeftPanel = new JPanel();
-		buttonStart = new Button("Start");
+		// Panel with combo box to ask for board type
+		JLabel boardTypeLabel = new JLabel("Board style:");
+		Box boardTypeLabelBox = Box.createHorizontalBox();
+		boardTypeLabelBox.add(boardTypeLabel);
+		boardTypeLabelBox.add(Box.createHorizontalGlue());
+
+		// Combo Boxes do not behave well with Boxes, need to include an anon class :(
+		// Not including anon class will cause the combo box's height to stretch out
+		JComboBox boardTypeComboBox = new JComboBox() {
+			@Override
+			public Dimension getMaximumSize() {
+				Dimension max = super.getMaximumSize();
+				max.height = getPreferredSize().height;
+				return max;
+			}
+		};
+		boardTypeComboBox.addItem("Standard");
+		boardTypeComboBox.addItem("Sharp");
+		boardTypeComboBox.setSelectedIndex(0);
+		boardTypeComboBox.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent event) {
+				if (event.getStateChange() == ItemEvent.SELECTED) {
+					changeBoardStyle((String) boardTypeComboBox.getSelectedItem());
+					board.revalidate();
+					board.repaint();
+				}
+			}
+		});
+		Box boardTypeBox = Box.createVerticalBox();
+		boardTypeBox.add(boardTypeLabelBox);
+		boardTypeBox.add(boardTypeComboBox);
+		boardTypeBox.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+		// Add panel with start and undo buttons at upper left corner
+		Box optionsBox = Box.createVerticalBox();
+		optionsBox.add(Box.createGlue());
+		optionsBox.add(initStoneBox);
+		optionsBox.add(Box.createGlue());
+		optionsBox.add(boardTypeBox);
+		optionsBox.add(Box.createGlue());
+		optionsBox.setBorder(BorderFactory.createTitledBorder("Options"));
+
+		// Label to tell whose turn or the status of the game
+		JLabel statusLabel = new JLabel();
+		statusLabel.setFont(fontStatus);
+		Box statusLabelBox = Box.createHorizontalBox();
+		statusLabelBox.add(statusLabel);
+
+		// Make a new board at the left panel
+		board = new MancalaBoardPanel(model, boardFormatter, statusLabel);
+
+		// Put board and start/undo button in one box
+		Box leftBox = Box.createVerticalBox();
+		leftBox.add(board);
+
+		// Bottom panel, status label and push buttons
+		JPanel bottomPanel = new JPanel();
+		bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.LINE_AXIS));
+		buttonStart = new JButton("Start");
 		buttonStart.addActionListener(event -> {
-			model.getState().emptyAllPits();
-			model.getState().setPlayerTurn(Player.A);
-			model.getState().populatePits(Integer.parseInt(bg.getSelection().getActionCommand()));
-			board.clearStones();
-			board.populateStones(model.getState().getPitMap());
-			board.randomizeAllPositions();
+			model.getState().setupGame(Integer.parseInt(bg.getSelection().getActionCommand()));
+			board.setupGraphics();
 			board.setGameStarted(true);
 			board.repaint();
 		});
-		buttonUndo = new Button("Undo");
+		buttonUndo = new JButton("Undo");
+		buttonUndo.addActionListener(event -> {
+			if (board.getPreviousState() != null) {
+				model.setState(model.getPreviousState());
+				board.getTimer().stop();
+				leftBox.remove(board);
+				leftBox.remove(bottomPanel);
+				board = board.getPreviousState();
+				leftBox.add(board);
+				leftBox.add(bottomPanel);
+				board.getTimer().start();
+				changeBoardStyle((String) boardTypeComboBox.getSelectedItem());
+				board.revalidate();
+				board.repaint();
+			}
+		});
 		buttonStart.setPreferredSize(new Dimension(80, 40));
+		buttonStart.setMaximumSize(new Dimension(80, 40));
 		buttonUndo.setPreferredSize(new Dimension(80, 40));
-		topLeftPanel.add(buttonStart);
-		topLeftPanel.add(buttonUndo);
+		buttonUndo.setMaximumSize(new Dimension(80, 40));
 
-		// Add panel with start and undo buttons at upper left corner
-		JPanel topPanel = new JPanel(new BorderLayout());
-		topPanel.add(topLeftPanel, BorderLayout.WEST);
-		topPanel.add(topRightPanel, BorderLayout.EAST);
-
-		// Make a new board for the bottom panel
-		board = new MancalaBoardPanel(1000, 400, model);
+		bottomPanel.add(Box.createHorizontalGlue());
+		bottomPanel.add(statusLabelBox);
+		bottomPanel.add(Box.createHorizontalGlue());
+		bottomPanel.add(buttonUndo);
+		bottomPanel.add(buttonStart);
+		bottomPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+		leftBox.add(bottomPanel);
 
 		// Put all panels in one frame
-		add(topPanel, BorderLayout.NORTH);
-		add(board, BorderLayout.CENTER);
+		content.add(leftBox);
+		content.add(optionsBox);
+		setContentPane(content);
 		setTitle("Mancala");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		pack();
+		getRootPane().setDefaultButton(buttonStart);
+		buttonStart.requestFocus();
 		setLocationRelativeTo(null); // Center the window
 		setVisible(true);
 
 	}
 
-	public Button getButtonStart() {
+	public JButton getButtonStart() {
 		return buttonStart;
 	}
 
-	public Button getButtonUndo() {
+	public JButton getButtonUndo() {
 		return buttonUndo;
 	}
 
 	public MancalaBoardPanel getBoard() {
 		return board;
+	}
+
+	/**
+	 * Change the board style.
+	 * 
+	 * @param boardStyle
+	 */
+	public void changeBoardStyle(String boardStyle) {
+		boolean boardStyleChanged = false;
+		switch (boardStyle) {
+		case ("Standard"):
+			if (!(board.getBoardFormatter() instanceof MancalaBoardStandard)) {
+				boardStyleChanged = true;
+				boardFormatter = new MancalaBoardStandard();
+				board.setBoardFormatter(boardFormatter);
+
+			}
+			break;
+		case ("Sharp"):
+			if (!(board.getBoardFormatter() instanceof MancalaBoardSharp)) {
+				boardStyleChanged = true;
+				boardFormatter = new MancalaBoardSharp();
+				board.setBoardFormatter(boardFormatter);
+			}
+			break;
+		}
+		if (boardStyleChanged) {
+			boardFormatter.drawBoard(board);
+			board.randomizeAllPositions();
+		}
+
 	}
 
 }

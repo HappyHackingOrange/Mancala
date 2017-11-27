@@ -10,13 +10,15 @@ import java.util.*;
  */
 public class MancalaStoneGraphics {
 
+	// Instance variables
+	final static double frames = 30;
+	
+	// Instance variables;
 	private double x;
 	private double y;
 	private Color color;
-	private Pit pit;
 
 	// For animation
-	final double divisor = 24;
 	private boolean isAnimating;
 	private double randX;
 	private double randY;
@@ -27,20 +29,28 @@ public class MancalaStoneGraphics {
 	private double nextX;
 	private double nextY;
 
-	// Constructors
-
-	/**
-	 * Specify color and pit number for this stone
-	 * 
-	 * @param color
-	 * @param pit
-	 */
-	public MancalaStoneGraphics(Color color, Pit pit) {
+	// Constructor
+	public MancalaStoneGraphics(Color color) {
 		x = 0;
 		y = 0;
 		this.color = color;
-		this.pit = pit;
 		isAnimating = false;
+	}
+	
+	// Copy-Constructor
+	public MancalaStoneGraphics(MancalaStoneGraphics stoneGraphics) {
+		x = stoneGraphics.x;
+		y = stoneGraphics.y;
+		color = stoneGraphics.color;
+		isAnimating = stoneGraphics.isAnimating;
+		randX = stoneGraphics.randX;
+		randY = stoneGraphics.randY;
+		diffX = stoneGraphics.diffX;
+		diffY = stoneGraphics.diffY;
+		segmentX = stoneGraphics.segmentX;
+		segmentY = stoneGraphics.segmentY;
+		nextX = stoneGraphics.nextX;
+		nextY = stoneGraphics.nextY;
 	}
 
 	// Getters and setters
@@ -69,13 +79,13 @@ public class MancalaStoneGraphics {
 		this.color = color;
 	}
 
-	public Pit getPit() {
-		return pit;
-	}
+//	public Pit getPit() {
+//		return pit;
+//	}
 
-	public void setPit(Pit pit) {
-		this.pit = pit;
-	}
+//	public void setPit(Pit pit) {
+//		this.pit = pit;
+//	}
 
 	public boolean isAnimating() {
 		return isAnimating;
@@ -168,8 +178,8 @@ public class MancalaStoneGraphics {
 		diffY = randY - y;
 
 		// Break up the x and y components of the translate path into segments
-		segmentX = diffX / divisor;
-		segmentY = diffY / divisor;
+		segmentX = diffX / frames;
+		segmentY = diffY / frames;
 
 		// Translate the stones
 		nextX = x + segmentX;

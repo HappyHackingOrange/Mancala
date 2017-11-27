@@ -10,40 +10,44 @@ public class MancalaGameState {
 
 	// Instance variables
 	private Pit sowedPit;
-	private EnumMap<Pit, LinkedList<Stone>> pitMap;
+	private EnumMap<Pit, LinkedList<Stone>> stoneListMap;
 	private Player playerTurn;
 	private boolean isGameOver;
 	private MancalaGameState previousState;
-	private List<Stone> stoneList;
-	private Queue<Stone> stoneSequence;
+	// private ArrayList<Stone> stoneList;
+	// private ArrayList<Tuple<Stone>> tupleList;
+	private Map<Stone, Pit> pitLookupTable;
+	private Queue<Tuple<Stone>> stoneSequence;
 
 	// Constructor
 	public MancalaGameState() {
 		sowedPit = null;
-		pitMap = new EnumMap<>(Pit.class);
+		stoneListMap = new EnumMap<>(Pit.class);
 		for (Pit pit : Pit.values())
-			pitMap.put(pit, new LinkedList<>());
+			stoneListMap.put(pit, new LinkedList<>());
 		playerTurn = Player.A;
 		isGameOver = false;
 		previousState = null;
-		stoneList = new ArrayList<>();
+		// tupleList = new ArrayList<>();
+		pitLookupTable = new HashMap<>();
 		stoneSequence = new LinkedList<>();
 	}
 
 	// Copy-constructor
-	MancalaGameState(MancalaGameState state) {
+	public MancalaGameState(MancalaGameState state) {
 		sowedPit = state.sowedPit;
-		pitMap = new EnumMap<>(Pit.class);
+		stoneListMap = new EnumMap<>(Pit.class);
+		// tupleList = new ArrayList<>(state.tupleList);
+		pitLookupTable = new HashMap<>(state.pitLookupTable);
 		for (Pit pit : Pit.values()) {
-			pitMap.put(pit, new LinkedList<>());
-			for (Stone stone : state.pitMap.get(pit))
-				offerStone(stone, pit);
+			stoneListMap.put(pit, new LinkedList<>());
+			for (Stone stone : state.stoneListMap.get(pit))
+				stoneListMap.get(pit).offer(stone);
 		}
 		playerTurn = state.playerTurn;
 		isGameOver = state.isGameOver;
 		if (state.previousState != null)
 			previousState = new MancalaGameState(state.previousState);
-		stoneList = new ArrayList<>(state.stoneList);
 		stoneSequence = new LinkedList<>(state.stoneSequence);
 	}
 
@@ -57,8 +61,8 @@ public class MancalaGameState {
 		return sowedPit;
 	}
 
-	public EnumMap<Pit, LinkedList<Stone>> getPitMap() {
-		return pitMap;
+	public EnumMap<Pit, LinkedList<Stone>> getStoneListMap() {
+		return stoneListMap;
 	}
 
 	public Player getPlayerTurn() {
@@ -69,13 +73,34 @@ public class MancalaGameState {
 		this.playerTurn = playerTurn;
 	}
 
-	public List<Stone> getStoneList() {
-		return stoneList;
+	// public ArrayList<Stone> getStoneList() {
+	// return stoneList;
+	// }
+
+	// public ArrayList<Tuple<Stone>> getTupleList() {
+	// return tupleList;
+	// }
+
+	public Map<Stone, Pit> getPitLookupTable() {
+		return pitLookupTable;
 	}
 
-	public Queue<Stone> getStoneSequence() {
+	public Queue<Tuple<Stone>> getStoneSequence() {
 		return stoneSequence;
 	}
+
+	public MancalaGameState getPreviousState() {
+		return previousState;
+	}
+
+	// /**
+	// * Find the tuple that the stone currently resides in the tuple list
+	// */
+	// public Tuple<Stone> searchTuple(Stone stone) {
+	// for (Tuple<Stone> tuple : tupleList)
+	// if (tuple.getStoneComponent() == stone)
+	// return tuple; return null;
+	// }
 
 	/**
 	 * Offer a stone to a pit.
@@ -84,15 +109,17 @@ public class MancalaGameState {
 	 * @param pit
 	 */
 	public void offerStone(Stone stone, Pit pit) {
-		stone.setPit(pit);
-		pitMap.get(pit).offer(stone);
+		// stone.setPit(pit);
+		// searchTuple(stone).setPit(pit);
+		pitLookupTable.put(stone, pit);
+		stoneListMap.get(pit).offer(stone);
 	}
 
 	/**
 	 * Offer a list of stones to a pit.
 	 */
-	public void offerStones(LinkedList<Stone> stones, Pit pit) {
-		for (Stone stone : stones)
+	public void offerStones(LinkedList<Stone> stoneList, Pit pit) {
+		for (Stone stone : stoneList)
 			offerStone(stone, pit);
 	}
 
@@ -104,8 +131,10 @@ public class MancalaGameState {
 	 * @return the stone that is being removed
 	 */
 	public Stone removeStone(Stone stone, Pit pit) {
-		stone.setPit(null);
-		pitMap.get(pit).remove(stone);
+		// stone.setPit(null);
+		// searchTuple(stone).setPit(null);
+		pitLookupTable.put(stone, null);
+		stoneListMap.get(pit).remove(stone);
 		return stone;
 	}
 
@@ -116,8 +145,10 @@ public class MancalaGameState {
 	 * @return the stone that was removed from the pit.
 	 */
 	public Stone pollStone(Pit pit) {
-		Stone stone = pitMap.get(pit).poll();
-		stone.setPit(null);
+		Stone stone = stoneListMap.get(pit).poll();
+		// stone.setPit(null);
+		// searchTuple(stone).setPit(null);
+		pitLookupTable.put(stone, null);
 		return stone;
 	}
 
@@ -128,7 +159,7 @@ public class MancalaGameState {
 	 */
 	public LinkedList<Stone> emptyPit(Pit pit) {
 		LinkedList<Stone> stoneList = new LinkedList<>();
-		while (!pitMap.get(pit).isEmpty())
+		while (!stoneListMap.get(pit).isEmpty())
 			stoneList.offer(pollStone(pit));
 		return stoneList;
 	}
@@ -137,8 +168,11 @@ public class MancalaGameState {
 	 * Empty all stones from all pits.
 	 */
 	public void emptyAllPits() {
-		for (Pit pit : pitMap.keySet())
+		for (Pit pit : stoneListMap.keySet())
 			emptyPit(pit);
+		// stoneList.clear();
+		// tupleList.clear();
+		pitLookupTable.clear();
 	}
 
 	/**
@@ -150,8 +184,11 @@ public class MancalaGameState {
 		for (Pit pit : Pit.smallPits)
 			for (int i = 0; i < initStones; i++) {
 				Stone stone = new Stone();
-				offerStone(stone, pit);
-				stoneList.add(stone);
+				// offerStone(stone, pit);
+				// stoneList.add(stone);
+				// tupleList.add(new Tuple<>(stone, pit));
+				pitLookupTable.put(stone, pit);
+				stoneListMap.get(pit).offer(stone);
 			}
 	}
 
@@ -198,12 +235,12 @@ public class MancalaGameState {
 		switch (playerTurn) {
 		case A:
 			for (Pit pit : Pit.sideAPits)
-				if (!pitMap.get(pit).isEmpty())
+				if (!stoneListMap.get(pit).isEmpty())
 					pitSet.add(pit);
 			break;
 		case B:
 			for (Pit pit : Pit.sideBPits)
-				if (!pitMap.get(pit).isEmpty())
+				if (!stoneListMap.get(pit).isEmpty())
 					pitSet.add(pit);
 		}
 		return pitSet;
@@ -215,11 +252,12 @@ public class MancalaGameState {
 	 * @param pit
 	 *            the pit containing the stones to sow.
 	 */
-	public void sow(Pit pit) {
+	public boolean sow(Pit pit) {
 
 		// Check if the pit is sowable.
-		if (!getSowablePits().contains(pit))
-			return;
+		if (!getSowablePits().contains(pit)) {
+			return false;
+		}
 
 		// Update the state.
 		sowedPit = pit;
@@ -232,25 +270,28 @@ public class MancalaGameState {
 
 		case A:
 			sowSubroutine(pit, Pit.MANCALA_A);
-			return;
+			return true;
 
 		case B:
 			sowSubroutine(pit, Pit.MANCALA_B);
+			return true;
 
 		}
+		
+		return false;
 
 	}
 
 	/**
 	 * To allow sowing on specific pits for current player.
 	 * 
-	 * @param pitNoMancalaCurrentPlayer
-	 * @param pitNoMancalaOppositingPlayer
+	 * @param pit
+	 * @param mancalaCurrentPlayer
 	 */
 	public void sowSubroutine(Pit pit, Pit mancalaCurrentPlayer) {
 
 		// Keep count of stones left to sow
-		int stonesLeft = pitMap.get(pit).size();
+		int stonesLeft = stoneListMap.get(pit).size();
 
 		// Get an iterator for pits that the player can sow in
 		EnumSet<Pit> pitSet = EnumSet.complementOf(EnumSet.of(getOppositePit(mancalaCurrentPlayer)));
@@ -262,7 +303,7 @@ public class MancalaGameState {
 
 		// Sow the stone to the right pits
 		Pit pitCurrent;
-		while (!pitMap.get(pit).isEmpty()) {
+		while (!stoneListMap.get(pit).isEmpty()) {
 
 			// Rotate iterator to beginning of pit set if it has reached to the end
 			if (!pitIterator.hasNext())
@@ -274,9 +315,9 @@ public class MancalaGameState {
 			// Add a stone in the current pit
 			Stone stoneCurrent = pollStone(pit);
 			offerStone(stoneCurrent, pitCurrent);
-			
+
 			// For animating one stone at a time
-			stoneSequence.add(stoneCurrent);
+			stoneSequence.offer(new Tuple<>(stoneCurrent, pitCurrent));
 
 			// Check which pit the last stone is in
 			if (--stonesLeft == 0) {
@@ -285,15 +326,17 @@ public class MancalaGameState {
 				// switch player turn
 				if (pitCurrent.equals(mancalaCurrentPlayer))
 					return;
-				else
-					changePlayer();
 
 				// Check if the last stone is being placed on the empty pit ON player's side. If
 				// so, get that last stone and all the stones in the opposite pit
-				if (pitMap.get(pitCurrent).size() == 1 && !pitMap.get(getOppositePit(pitCurrent)).isEmpty()) {
+				if (((playerTurn == Player.A && Pit.sideAPits.contains(pitCurrent))
+						|| (playerTurn == Player.B && Pit.sideBPits.contains(pitCurrent)))
+						&& stoneListMap.get(pitCurrent).size() == 1 && !stoneListMap.get(getOppositePit(pitCurrent)).isEmpty()) {
 					offerStone(pollStone(pitCurrent), mancalaCurrentPlayer);
 					offerStones(emptyPit(getOppositePit(pitCurrent)), mancalaCurrentPlayer);
 				}
+
+				changePlayer();
 
 			}
 
@@ -313,7 +356,7 @@ public class MancalaGameState {
 		// Check if side A is empty
 		boolean isSideAEmpty = true;
 		for (Pit pit : Pit.sideAPits)
-			if (!pitMap.get(pit).isEmpty()) {
+			if (!stoneListMap.get(pit).isEmpty()) {
 				isSideAEmpty = false;
 				break;
 			}
@@ -321,7 +364,7 @@ public class MancalaGameState {
 		// Check if side B is empty
 		boolean isSideBEmpty = true;
 		for (Pit pit : Pit.sideBPits)
-			if (!pitMap.get(pit).isEmpty()) {
+			if (!stoneListMap.get(pit).isEmpty()) {
 				isSideBEmpty = false;
 				break;
 			}
@@ -354,23 +397,57 @@ public class MancalaGameState {
 	}
 
 	/**
+	 * Set up a new game.
+	 * 
+	 * @param initStones
+	 *            initial stones per pit to start with
+	 */
+	public void setupGame(int initStones) {
+		isGameOver = false;
+		emptyAllPits();
+		setPlayerTurn(Player.A);
+		populatePits(initStones);
+	}
+
+	/**
 	 * Produces a String output of the current numbers of stones in each pit
 	 */
 	@Override
 	public String toString() {
+
 		StringBuilder sb = new StringBuilder("   ");
 		Object[] pits = Pit.sideBPits.toArray();
 		for (int i = pits.length - 1; i >= 0; i--)
-			sb.append(String.format("%3d", pitMap.get(pits[i]).size()));
+			sb.append(String.format("%3d", stoneListMap.get(pits[i]).size()));
 		sb.append('\n');
-		sb.append(String.format("%3d", pitMap.get(Pit.MANCALA_B).size()));
+		sb.append(String.format("%3d", stoneListMap.get(Pit.MANCALA_B).size()));
 		sb.append(String.format("%0" + 18 + "d", 0).replace("0", " "));
-		sb.append(String.format("%3d", pitMap.get(Pit.MANCALA_A).size()));
+		sb.append(String.format("%3d", stoneListMap.get(Pit.MANCALA_A).size()));
 		sb.append("\n   ");
 		for (Pit pit : Pit.sideAPits)
-			sb.append(String.format("%3d", pitMap.get(pit).size()));
-		sb.append("\n");
+			sb.append(String.format("%3d", stoneListMap.get(pit).size()));
+		sb.append("\n\n");
+		// sb.append(String.format("Stone Sequence: %s%n%n", stoneSequence));
 		return sb.toString();
+
+		// // Print out pit graphics map info
+		// StringBuilder strBldr = new StringBuilder(sb);
+		// strBldr.append("pitMap:\n");
+		// for (Pit pit : Pit.values()) {
+		// strBldr.append(String.format(" %s:%n ", pit));
+		// for (Stone stone : pitMap.get(pit))
+		// strBldr.append(String.format("%x:%s ", stone.hashCode(), stone.getPit()));
+		// strBldr.append("\n");
+		// }
+		//
+		// // Print out stone graphics map info
+		// strBldr.append("stoneList:\n");
+		// for (Stone stone : stoneList) {
+		// strBldr.append(String.format(" %x:%s%n", stone.hashCode(), stone.getPit()));
+		// }
+		//
+		// return strBldr.toString();
+
 	}
 
 }

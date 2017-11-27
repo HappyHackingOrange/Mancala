@@ -12,111 +12,425 @@ import javax.swing.Timer;
  * @author Vincent Stowbunenko
  *
  */
-public class MancalaBoardPanel extends JPanel implements MouseListener, MouseMotionListener, ActionListener {
+public class MancalaBoardPanel extends JPanel implements ActionListener {
 
-	private MancalaModel model;
-	private RoundRectangle2D board;
-	// private MancalaPitGraphics[] pitGraphics;
-	private EnumMap<Pit, MancalaPitGraphics> pitGraphicsMap;
-	private Map<Stone, MancalaStoneGraphics> stoneMap;
-	private double stoneSize;
-	private boolean hasOutlines;
-	private Color[] colors = new Color[] { new Color(0xF16A70), new Color(0xB1D877), new Color(0x8CDCDA),
+	// Constant variables
+	private static final long serialVersionUID = 1L;
+	private final Color[] colors = new Color[] { new Color(0xF16A70), new Color(0xB1D877), new Color(0x8CDCDA),
 			new Color(0x4D4D4D) };
-	private Timer timer;
-	private final int DELAY = 10;
+	private final int DELAY = 11;
+	private final double stoneSize = 30;
+	private final boolean hasOutlines = true;
+
+	// Instance variables
+	private MancalaModel model;
+	private RectangularShape board;
+	private EnumMap<Pit, MancalaPitGraphics> pitGraphicsMap;
+	private Map<Stone, Tuple<MancalaStoneGraphics>> stoneGraphicsMap;
 	private boolean gameStarted;
 	private Pit pitNoHighlight; // the pit to highlight when mouse is over the pit
+	private Timer timer;
+	private MancalaBoardPanel previousState;
+	private MancalaBoardFormatter boardFormatter;
+	private JLabel statusLabel;
 
-	public MancalaBoardPanel(int width, int height, MancalaModel model) {
+	// Constructors
+	public MancalaBoardPanel(MancalaModel model, MancalaBoardFormatter boardFormatter, JLabel statusLabel) {
 
-		stoneMap = new HashMap<>();
 		this.model = model;
-		hasOutlines = true;
-		int pad = height / 20;
-		stoneSize = 30;
-		// pitGraphicsMap = new MancalaPitGraphics[14];
 		pitGraphicsMap = new EnumMap<>(Pit.class);
-		gameStarted = false;
-		pitNoHighlight = null;
-		// for (int i = 0; i < 14; i++)
 		for (Pit pit : Pit.values())
 			pitGraphicsMap.put(pit, new MancalaPitGraphics());
+		stoneGraphicsMap = new HashMap<>();
+		gameStarted = false;
+		pitNoHighlight = null;
+		previousState = null;
+		this.boardFormatter = boardFormatter;
+		this.statusLabel = statusLabel;
 
-		setPreferredSize(new Dimension(width, height));
-
-		// Draw the initial board without pits
-		board = new RoundRectangle2D.Double(pad, pad, width - pad * 2, height - pad * 2, 0, 0);
-
-		// Draw big pits
-		double pitPad = 10;
-		double pitWidth = board.getWidth() / 8 - 2 * pitPad;
-		double bigPitHeight = board.getHeight() - 2 * pitPad;
-		pitGraphicsMap.get(Pit.MANCALA_A)
-				.setOuterBound(new RoundRectangle2D.Double(board.getX() + (pitWidth + 2 * pitPad) * 7 + pitPad,
-						board.getY() + pitPad, pitWidth, bigPitHeight, pitWidth, pitWidth));
-		pitGraphicsMap.get(Pit.MANCALA_B).setOuterBound(new RoundRectangle2D.Double(board.getX() + pitPad,
-				board.getY() + pitPad, pitWidth, bigPitHeight, pitWidth, pitWidth));
-
-		// Create pits boundaries for placing each center of stone in random positions
-		double pitBoundPad = stoneSize / 2;
-		double pitBoundWidth = pitGraphicsMap.get(Pit.MANCALA_A).getOuterBound().getWidth() - 2 * pitBoundPad;
-		double bigPitBoundHeight = pitGraphicsMap.get(Pit.MANCALA_A).getOuterBound().getHeight() - 2 * pitBoundPad;
-		pitGraphicsMap.get(Pit.MANCALA_A)
-				.setInnerBound(new RoundRectangle2D.Double(
-						pitGraphicsMap.get(Pit.MANCALA_A).getOuterBound().getX() + pitBoundPad,
-						pitGraphicsMap.get(Pit.MANCALA_A).getOuterBound().getY() + pitBoundPad, pitBoundWidth,
-						bigPitBoundHeight, pitBoundWidth, pitBoundWidth));
-		pitGraphicsMap.get(Pit.MANCALA_B)
-				.setInnerBound(new RoundRectangle2D.Double(
-						pitGraphicsMap.get(Pit.MANCALA_B).getOuterBound().getX() + pitBoundPad,
-						pitGraphicsMap.get(Pit.MANCALA_B).getOuterBound().getY() + pitBoundPad, pitBoundWidth,
-						bigPitBoundHeight, pitBoundWidth, pitBoundWidth));
-
-		// Draw small pits
-		double smallPitHeight = board.getHeight() / 2 - 2 * pitPad;
-		// for (int i = 0; i < 6; i++)
-		for (Pit pit : Pit.sideAPits)
-			pitGraphicsMap.get(pit)
-					.setOuterBound(new RoundRectangle2D.Double(
-							board.getX() + (pitWidth + 2 * pitPad) * (pit.ordinal() + 1) + pitPad,
-							board.getY() + smallPitHeight + pitPad * 3, pitWidth, smallPitHeight, pitWidth, pitWidth));
-		// for (int i = 7; i < 13; i++)
-		for (Pit pit : Pit.sideBPits)
-			pitGraphicsMap.get(pit)
-					.setOuterBound(new RoundRectangle2D.Double(
-							board.getX() + (pitWidth + 2 * pitPad) * (13 - pit.ordinal()) + pitPad,
-							board.getY() + pitPad, pitWidth, smallPitHeight, pitWidth, pitWidth));
-
-		// Create big pits boundaries for placing each center of stone in random
-		// positions
-		double smallPitBoundHeight = pitGraphicsMap.get(Pit.A1).getOuterBound().getHeight() - 2 * pitBoundPad;
-		// for (int i = 0; i < 6; i++)
-		for (Pit pit : Pit.sideAPits)
-			pitGraphicsMap.get(pit).setInnerBound(
-					new RoundRectangle2D.Double(pitGraphicsMap.get(pit).getOuterBound().getX() + pitBoundPad,
-							pitGraphicsMap.get(pit).getOuterBound().getY() + pitBoundPad, pitBoundWidth,
-							smallPitBoundHeight, pitBoundWidth, pitBoundWidth));
-		// for (int i = 7; i < 13; i++)
-		for (Pit pit : Pit.sideBPits)
-			pitGraphicsMap.get(pit).setInnerBound(
-					new RoundRectangle2D.Double(pitGraphicsMap.get(pit).getOuterBound().getX() + pitBoundPad,
-							pitGraphicsMap.get(pit).getOuterBound().getY() + pitBoundPad, pitBoundWidth,
-							smallPitBoundHeight, pitBoundWidth, pitBoundWidth));
-
-		// Make the corners look more natural
-		board.setRoundRect(pad, pad, width - pad * 2, height - pad * 2, pitWidth + pad, pitWidth + pad);
+		// Call the strategy pattern to draw a specific style of the board
+		boardFormatter.drawBoard(this);
 
 		// Listen for any mouse actions
-		addMouseListener(this);
-		addMouseMotionListener(this);
-
-		// Make all drawing be done in memory first
-		setDoubleBuffered(true);
+		addMouseListener(new MouseReleasedListener());
+		addMouseMotionListener(new MouseMovedListener());
 
 		// Timer for animation
 		timer = new Timer(DELAY, this);
 		timer.start();
+
+	}
+
+	// Copy-constructor. Used to save states.
+	public MancalaBoardPanel(MancalaBoardPanel boardPanel) {
+		model = boardPanel.model;
+		board = boardPanel.board;
+		boardFormatter = boardPanel.boardFormatter;
+		boardFormatter.setPreferredSize(this);
+		statusLabel = boardPanel.statusLabel;
+		pitGraphicsMap = new EnumMap<>(Pit.class);
+		for (Pit pit : Pit.values())
+			pitGraphicsMap.put(pit, new MancalaPitGraphics(boardPanel.pitGraphicsMap.get(pit)));
+		stoneGraphicsMap = new HashMap<Stone, Tuple<MancalaStoneGraphics>>();
+		for (Map.Entry<Stone, Tuple<MancalaStoneGraphics>> entry : boardPanel.stoneGraphicsMap.entrySet()) {
+			Stone stone = entry.getKey();
+			Tuple<MancalaStoneGraphics> tuple = entry.getValue();
+			Tuple<MancalaStoneGraphics> newTuple = new Tuple<>(tuple);
+			newTuple.setStoneComponent(new MancalaStoneGraphics(tuple.getStoneComponent()));
+			stoneGraphicsMap.put(stone, newTuple);
+		}
+		gameStarted = boardPanel.gameStarted;
+		previousState = null;
+		addMouseListener(new MouseReleasedListener());
+		addMouseMotionListener(new MouseMovedListener());
+		timer = new Timer(DELAY, this);
+	}
+
+	// Getters and Setters
+
+	public boolean isGameStarted() {
+		return gameStarted;
+	}
+
+	public void setGameStarted(boolean gameStarted) {
+		this.gameStarted = gameStarted;
+	}
+
+	public MancalaBoardPanel getPreviousState() {
+		return previousState;
+	}
+
+	public Timer getTimer() {
+		return timer;
+	}
+
+	public RectangularShape getBoard() {
+		return board;
+	}
+
+	public void setBoard(RectangularShape board) {
+		this.board = board;
+	}
+
+	public EnumMap<Pit, MancalaPitGraphics> getPitGraphicsMap() {
+		return pitGraphicsMap;
+	}
+
+	public double getStoneSize() {
+		return stoneSize;
+	}
+
+	public MancalaBoardFormatter getBoardFormatter() {
+		return boardFormatter;
+	}
+
+	public void setBoardFormatter(MancalaBoardFormatter boardFormatter) {
+		this.boardFormatter = boardFormatter;
+	}
+
+	/**
+	 * Set up graphics for a new game.
+	 */
+	public void setupGraphics() {
+		emptyAllPitGraphics();
+		populateStones(model.getState().getStoneListMap());
+		randomizeAllPositions();
+	}
+
+	/**
+	 * Randomize all stone positions. Need to make sure each stones are not too
+	 * close to each other. The stones will not animate.
+	 */
+	public void randomizeAllPositions() {
+
+		// Look througth all pits
+		for (Pit pit : Pit.values())
+
+			// Check if the pit is not empty
+			if (!pitGraphicsMap.get(pit).getStoneList().isEmpty()) {
+
+				// Randomize first stone position
+				randomizePosition(pitGraphicsMap.get(pit).getStoneList().get(0),
+						pitGraphicsMap.get(pit).getInnerBound(), false);
+
+				// Randomize the next stone position, making sure it is not too close to the
+				// previous randomized stones.
+				for (int j = 1; j < pitGraphicsMap.get(pit).getStoneList().size(); j++) {
+					Stone stone1 = pitGraphicsMap.get(pit).getStoneList().get(j);
+					boolean tooClose = true;
+					while (tooClose) {
+						randomizePosition(stone1, pitGraphicsMap.get(pit).getInnerBound(), false);
+						tooClose = false;
+						for (int k = 0; k < j; k++) {
+							Stone stone2 = pitGraphicsMap.get(pit).getStoneList().get(k);
+							if (distance(stone1, stone2) < stoneSize / 2) {
+								tooClose = true;
+								break;
+							}
+						}
+					}
+				}
+
+			}
+
+	}
+
+	/**
+	 * Place a stone in a random position in a hole. Also has an option to whether
+	 * animate this stone or not.
+	 * 
+	 * @param stone
+	 * @param shape
+	 * @param animate
+	 */
+	public void randomizePosition(Stone stone, RectangularShape shape, boolean animate) {
+
+		Random rand = new Random();
+		double randX = shape.getMinX() + (shape.getMaxX() - shape.getMinX()) * rand.nextDouble();
+		double randY = shape.getMinY() + (shape.getMaxY() - shape.getMinY()) * rand.nextDouble();
+
+		// If the stone is not inside the shape, randomize again
+		while (!shape.contains(randX, randY)) {
+			randX = shape.getMinX() + (shape.getMaxX() - shape.getMinX()) * rand.nextDouble();
+			randY = shape.getMinY() + (shape.getMaxY() - shape.getMinY()) * rand.nextDouble();
+		}
+
+		// The stone position is located at the upper left corner
+		randX -= stoneSize / 2;
+		randY -= stoneSize / 2;
+
+		if (animate) {
+			stoneGraphicsMap.get(stone).getStoneComponent().queueAnimating(randX, randY);
+		} else {
+			stoneGraphicsMap.get(stone).getStoneComponent().setX(randX);
+			stoneGraphicsMap.get(stone).getStoneComponent().setY(randY);
+			stoneGraphicsMap.get(stone).getStoneComponent().setRandX(randX);
+			stoneGraphicsMap.get(stone).getStoneComponent().setRandY(randY);
+		}
+
+	}
+
+	/**
+	 * Calculate distance between stones.
+	 * 
+	 * @param stone1
+	 * @param stone2
+	 * @return the distance between stones
+	 */
+	public double distance(Stone stone1, Stone stone2) {
+		MancalaStoneGraphics stoneGraphics1 = stoneGraphicsMap.get(stone1).getStoneComponent();
+		MancalaStoneGraphics stoneGraphics2 = stoneGraphicsMap.get(stone2).getStoneComponent();
+		return Math.sqrt(Math.pow(stoneGraphics1.getX() - stoneGraphics2.getX(), 2)
+				+ Math.pow(stoneGraphics1.getY() - stoneGraphics2.getY(), 2));
+	}
+
+	/**
+	 * Calculate distance between final positions of stones.
+	 * 
+	 * @param stone1
+	 * @param stone2
+	 * @return the distance between stones
+	 */
+	public double distanceFinal(Stone stone1, Stone stone2) {
+		MancalaStoneGraphics stoneGraphics1 = stoneGraphicsMap.get(stone1).getStoneComponent();
+		MancalaStoneGraphics stoneGraphics2 = stoneGraphicsMap.get(stone2).getStoneComponent();
+		return Math.sqrt(Math.pow(stoneGraphics1.getRandX() - stoneGraphics2.getRandX(), 2)
+				+ Math.pow(stoneGraphics1.getRandY() - stoneGraphics2.getRandY(), 2));
+	}
+
+	/**
+	 * Calculate distance between two points
+	 * 
+	 * @param x1
+	 * @param y1
+	 * @param x2
+	 * @param y2
+	 * @return the distance
+	 */
+	public double distance(double x1, double y1, double x2, double y2) {
+		return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+	}
+
+	/**
+	 * Add a stone graphics to the pit graphic and update stone's pit info.
+	 * 
+	 * @param pit
+	 * @param stone
+	 */
+	public void offerStone(Pit pit, Stone stone) {
+		pitGraphicsMap.get(pit).getStoneList().offer(stone);
+		stoneGraphicsMap.get(stone).setPit(pit);
+	}
+
+	/**
+	 * Poll a stone graphics from the pit graphics and update stone's pit info.
+	 */
+	public Stone pollStone(Pit pit) {
+		Stone stone = pitGraphicsMap.get(pit).getStoneList().poll();
+		stoneGraphicsMap.get(stone).setPit(pit);
+		return stone;
+	}
+
+	/**
+	 * Remove a stone graphic from the pit graphics and update stone's pit info.
+	 */
+	public Stone removeStone(Pit pit, Stone stone) {
+		pitGraphicsMap.get(pit).getStoneList().remove(stone);
+		// stone.setPit(null);
+		stoneGraphicsMap.get(stone).setPit(null);
+		return stone;
+	}
+
+	/**
+	 * Empty the stone graphics from the pit graphics.
+	 */
+	public void emptyPitGraphics(Pit pit) {
+		while (!pitGraphicsMap.get(pit).getStoneList().isEmpty())
+			pollStone(pit);
+	}
+
+	/**
+	 * Clear all stones on the viewer.
+	 */
+	public void emptyAllPitGraphics() {
+		for (Pit pit : Pit.values())
+			emptyPitGraphics(pit);
+		stoneGraphicsMap.clear();
+	}
+
+	/**
+	 * Populate the stones on the pits based on the model.
+	 * 
+	 * @param pitMap
+	 *            the pit map from the model
+	 */
+	public void populateStones(EnumMap<Pit, LinkedList<Stone>> pitMap) {
+		for (Pit pit : Pit.smallPits)
+			for (int i = 0; i < pitMap.get(pit).size(); i++) {
+				MancalaStoneGraphics stoneGraphics = new MancalaStoneGraphics(colors[i]);
+				Stone stone = pitMap.get(pit).get(i);
+				stoneGraphicsMap.put(stone, new Tuple<>(stoneGraphics, pit));
+				offerStone(pit, stone);
+			}
+	}
+
+	/**
+	 * Randomize all stone positions which the stones that have moved. Need to check
+	 * to make sure the stones are not too close to each other.
+	 */
+	public void updateStonePositions(boolean animate) {
+
+		// First check to see if the model has a list of stones...
+		if (model.getState().getPitLookupTable() != null) {
+
+			// Check if there is animating sequence from the model
+			if (!model.getState().getStoneSequence().isEmpty()) {
+				Tuple<Stone> tuple = model.getState().getStoneSequence().poll();
+				updateStonePosition(tuple.getStoneComponent(), tuple.getPit(), animate);
+			}
+
+			// Otherwise animate the rest of the stones at same time
+			else
+				for (Map.Entry<Stone, Pit> entry : model.getState().getPitLookupTable().entrySet()) {
+					Stone stone = entry.getKey();
+					Pit pit = entry.getValue();
+					if (!pit.equals(stoneGraphicsMap.get(stone).getPit()))
+						updateStonePosition(stone, pit, animate);
+				}
+		}
+	}
+
+	/**
+	 * Update the stone position.
+	 * 
+	 * @param stone
+	 */
+	public void updateStonePosition(Stone stone, Pit pit, boolean animate) {
+
+		// Get stone graphics info
+		MancalaStoneGraphics stoneGraphics = stoneGraphicsMap.get(stone).getStoneComponent();
+		Pit pitPrevious = stoneGraphicsMap.get(stone).getPit();
+
+		// Remove the stone from the previous pit and put it in the next pit
+		offerStone(pit, removeStone(pitPrevious, stone));
+
+		// Tell the stone to start animating
+		stoneGraphics.setAnimating(animate);
+
+		// Randomize the stone position in its next pit while check to make sure that it
+		// is not too close to other pits
+		boolean tooClose = true;
+		while (tooClose) {
+			randomizePosition(stone, pitGraphicsMap.get(pit).getInnerBound(), animate);
+			tooClose = false;
+			for (Stone stoneOther : pitGraphicsMap.get(pit).getStoneList()) {
+				if (stone == stoneOther)
+					continue;
+				if (distanceFinal(stone, stoneOther) < stoneSize / 2) {
+					tooClose = true;
+					break;
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * Check if the stones are still moving around.
+	 */
+	public boolean isBoardStillAnimating() {
+		for (Tuple<MancalaStoneGraphics> tuple : stoneGraphicsMap.values())
+			if (tuple.getStoneComponent().isAnimating())
+				return true;
+		return false;
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent event) {
+
+		for (Tuple<MancalaStoneGraphics> tuple : stoneGraphicsMap.values()) {
+
+			MancalaStoneGraphics stoneGraphics = tuple.getStoneComponent();
+
+			// Check if any of the stones are animating
+			if (stoneGraphics.isAnimating()) {
+				if (stoneGraphics.getDiffX() * (stoneGraphics.getRandX() - stoneGraphics.getNextX()) > 0
+						&& stoneGraphics.getDiffY() * (stoneGraphics.getRandY() - stoneGraphics.getNextY()) > 0) {
+					stoneGraphics.setX(stoneGraphics.getNextX());
+					stoneGraphics.setY(stoneGraphics.getNextY());
+					stoneGraphics.setNextX(stoneGraphics.getNextX() + stoneGraphics.getSegmentX());
+					stoneGraphics.setNextY(stoneGraphics.getNextY() + stoneGraphics.getSegmentY());
+				} else {
+					stoneGraphics.setX(stoneGraphics.getRandX());
+					stoneGraphics.setY(stoneGraphics.getRandY());
+					stoneGraphics.setAnimating(false);
+					updateStonePositions(true);
+				}
+				revalidate();
+				repaint();
+			}
+
+		}
+
+		// Let the players know the status of the game
+		if (isBoardStillAnimating())
+			statusLabel.setText("Sowing the stones...");
+		else if (model.getState().isGameOver()) {
+			int playerAScore = model.getState().getStoneListMap().get(Pit.MANCALA_A).size();
+			int playerBScore = model.getState().getStoneListMap().get(Pit.MANCALA_B).size();
+			if (playerAScore > playerBScore)
+				statusLabel.setText(String.format("Player %s won the game!", Player.A));
+			else if (playerAScore < playerBScore)
+				statusLabel.setText(String.format("Player %s won the game!", Player.B));
+			else
+				statusLabel.setText("Game ended in draw.");
+		} else {
+			if (isGameStarted())
+				statusLabel
+						.setText(String.format("It's player %s's turn. Pick a pit.", model.getState().getPlayerTurn()));
+			else
+				statusLabel.setText("Welcome to the game of Mancala!");
+		}
 
 	}
 
@@ -138,18 +452,16 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, MouseMot
 		g2.setColor(new Color(142, 106, 63));
 		g2.fill(pitGraphicsMap.get(Pit.MANCALA_A).getOuterBound());
 		g2.fill(pitGraphicsMap.get(Pit.MANCALA_B).getOuterBound());
-		// for (int i = 0; i < 6; i++) {
 		for (Pit pit : Pit.sideAPits) {
 			if (gameStarted && !isBoardStillAnimating() && model.getState().getPlayerTurn().equals(Player.A)
-					&& pitNoHighlight == pit && !pitGraphicsMap.get(pit).getStones().isEmpty())
+					&& pitNoHighlight == pit && !pitGraphicsMap.get(pit).getStoneList().isEmpty())
 				g2.setColor(new Color(117, 81, 38));
 			g2.fill(pitGraphicsMap.get(pit).getOuterBound());
 			g2.setColor(new Color(142, 106, 63));
 		}
-		// for (int i = 7; i < 13; i++) {
 		for (Pit pit : Pit.sideBPits) {
 			if (gameStarted && !isBoardStillAnimating() && model.getState().getPlayerTurn().equals(Player.B)
-					&& pitNoHighlight == pit && !pitGraphicsMap.get(pit).getStones().isEmpty())
+					&& pitNoHighlight == pit && !pitGraphicsMap.get(pit).getStoneList().isEmpty())
 				g2.setColor(new Color(117, 81, 38));
 			g2.fill(pitGraphicsMap.get(pit).getOuterBound());
 			g2.setColor(new Color(142, 106, 63));
@@ -161,18 +473,16 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, MouseMot
 			g2.draw(board);
 			g2.draw(pitGraphicsMap.get(Pit.MANCALA_A).getOuterBound());
 			g2.draw(pitGraphicsMap.get(Pit.MANCALA_B).getOuterBound());
-			// for (int i = 0; i < 6; i++) {
 			for (Pit pit : Pit.sideAPits) {
 				if (gameStarted && !isBoardStillAnimating() && model.getState().getPlayerTurn().equals(Player.A)
-						&& !pitGraphicsMap.get(pit).getStones().isEmpty())
+						&& !pitGraphicsMap.get(pit).getStoneList().isEmpty())
 					g2.setStroke(new BasicStroke(thickness));
 				g2.draw(pitGraphicsMap.get(pit).getOuterBound());
 				g2.setStroke(oldStroke);
 			}
-			// for (int i = 7; i < 13; i++) {
 			for (Pit pit : Pit.sideBPits) {
 				if (gameStarted && !isBoardStillAnimating() && model.getState().getPlayerTurn().equals(Player.B)
-						&& !pitGraphicsMap.get(pit).getStones().isEmpty())
+						&& !pitGraphicsMap.get(pit).getStoneList().isEmpty())
 					g2.setStroke(new BasicStroke(thickness));
 				g2.draw(pitGraphicsMap.get(pit).getOuterBound());
 				g2.setStroke(oldStroke);
@@ -180,345 +490,87 @@ public class MancalaBoardPanel extends JPanel implements MouseListener, MouseMot
 		}
 
 		// Draw stones
-		// for (int i = 0; i < 14; i++)
 		for (Pit pit : Pit.values())
-			for (MancalaStoneGraphics stone : pitGraphicsMap.get(pit).getStones()) {
-				g2.setColor(stone.getColor());
-				g2.fill(new Ellipse2D.Double(stone.getX(), stone.getY(), stoneSize, stoneSize));
+			for (Stone stone : pitGraphicsMap.get(pit).getStoneList()) {
+				MancalaStoneGraphics stoneGraphics = stoneGraphicsMap.get(stone).getStoneComponent();
+				g2.setColor(stoneGraphics.getColor());
+				g2.fill(new Ellipse2D.Double(stoneGraphics.getX(), stoneGraphics.getY(), stoneSize, stoneSize));
 				g2.setColor(Color.BLACK);
-				g2.draw(new Ellipse2D.Double(stone.getX(), stone.getY(), stoneSize, stoneSize));
+				g2.draw(new Ellipse2D.Double(stoneGraphics.getX(), stoneGraphics.getY(), stoneSize, stoneSize));
 			}
 
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder strBldr = new StringBuilder();
+
+		// Print out pit graphics map info
+		strBldr.append("pitGraphicsMap:\n");
+		for (Pit pit : Pit.values()) {
+			strBldr.append(String.format("  %s:%n    ", pit));
+			for (Stone stone : pitGraphicsMap.get(pit).getStoneList()) {
+				MancalaStoneGraphics stoneGraphics = stoneGraphicsMap.get(stone).getStoneComponent();
+				strBldr.append(String.format("%x:%s:%s ", stoneGraphics.hashCode(), pit, stoneGraphics.isAnimating()));
+			}
+			strBldr.append("\n");
+		}
+
+		// Print out stone graphics map info
+		strBldr.append("stoneMap:\n");
+		for (Map.Entry<Stone, Tuple<MancalaStoneGraphics>> entry : stoneGraphicsMap.entrySet())
+			strBldr.append(String.format("  %x:%s%n", entry.getValue().hashCode(), entry.getValue().getPit()));
+
+		return strBldr.toString();
+
+	}
+
 	/**
-	 * Place a stone in a random position in a hole. Also has an option to whether
-	 * animate this stone or not.
+	 * Mouse adapter class to just focus on one listener (do something when the
+	 * mouse is released)
 	 * 
-	 * @param stone
-	 * @param shape
+	 * @author Vincetn Stowbunenko
+	 *
 	 */
-	public void randomizePosition(MancalaStoneGraphics stone, RoundRectangle2D shape, boolean animate) {
+	private class MouseReleasedListener extends MouseAdapter {
 
-		Random rand = new Random();
-		double randX = shape.getMinX() + (shape.getMaxX() - shape.getMinX()) * rand.nextDouble();
-		double randY = shape.getMinY() + (shape.getMaxY() - shape.getMinY()) * rand.nextDouble();
+		public void mouseReleased(MouseEvent event) {
 
-		// If the stone is not inside the shape, randomize again
-		while (!shape.contains(randX, randY)) {
-			randX = shape.getMinX() + (shape.getMaxX() - shape.getMinX()) * rand.nextDouble();
-			randY = shape.getMinY() + (shape.getMaxY() - shape.getMinY()) * rand.nextDouble();
-		}
-
-		// The stone position is located at the upper left corner
-		randX -= stoneSize / 2;
-		randY -= stoneSize / 2;
-
-		if (animate) {
-			stone.queueAnimating(randX, randY);
-		} else {
-			stone.setX(randX);
-			stone.setY(randY);
-			stone.setRandX(randX);
-			stone.setRandY(randY);
-		}
-
-	}
-
-	/**
-	 * Randomize all stone positions. Need to make sure each stones are not too
-	 * close to each other.
-	 */
-	public void randomizeAllPositions() {
-
-		// for (int i = 0; i < 13; i++) {
-		for (Pit pit : Pit.smallPits) {
-			if (pitGraphicsMap.get(pit).getStones().size() > 0) {
-
-				randomizePosition(pitGraphicsMap.get(pit).getStones().get(0), pitGraphicsMap.get(pit).getInnerBound(),
-						false);
-				for (int j = 1; j < pitGraphicsMap.get(pit).getStones().size(); j++) {
-					MancalaStoneGraphics stone1 = pitGraphicsMap.get(pit).getStones().get(j);
-					boolean tooClose = true;
-					while (tooClose) {
-						randomizePosition(stone1, pitGraphicsMap.get(pit).getInnerBound(), false);
-						tooClose = false;
-						for (int k = 0; k < j; k++) {
-							MancalaStoneGraphics stone2 = pitGraphicsMap.get(pit).getStones().get(k);
-							if (distance(stone1, stone2) < stoneSize / 2) {
-								tooClose = true;
-								break;
-							}
-						}
-					}
+			// Get the pit number the user clicked on and sow it
+			Point point = event.getPoint();
+			for (Pit pit : Pit.values())
+				if (!isBoardStillAnimating() && !model.getState().getSowablePits().isEmpty()
+						&& pitGraphicsMap.get(pit).getOuterBound().contains(point)) {
+					model.getState().sow(pit);
+					model.getState().checkIfGameEnded();
+					previousState = new MancalaBoardPanel(MancalaBoardPanel.this);
+					updateStonePositions(true);
+					break;
 				}
-			}
+
 		}
 
 	}
 
 	/**
-	 * Calculate distance between stones.
-	 * 
-	 * @param stone1
-	 * @param stone2
-	 * @return the distance between stones
+	 * Mouse motion adapter class to listen for mouse motions
 	 */
-	public double distance(MancalaStoneGraphics stone1, MancalaStoneGraphics stone2) {
-		return Math.sqrt(Math.pow(stone1.getX() - stone2.getX(), 2) + Math.pow(stone1.getY() - stone2.getY(), 2));
-	}
+	private class MouseMovedListener extends MouseMotionAdapter {
 
-	/**
-	 * Calculate distance between final positions of stones.
-	 * 
-	 * @param stone1
-	 * @param stone2
-	 * @return the distance between stones
-	 */
-	public double distanceFinal(MancalaStoneGraphics stone1, MancalaStoneGraphics stone2) {
-		return Math.sqrt(Math.pow(stone1.getRandX() - stone2.getRandX(), 2)
-				+ Math.pow(stone1.getRandY() - stone2.getRandY(), 2));
-	}
-
-	/**
-	 * Calculate distance between two points
-	 * 
-	 * @param x1
-	 * @param y1
-	 * @param x2
-	 * @param y2
-	 * @return the distance
-	 */
-	public double distance(double x1, double y1, double x2, double y2) {
-		return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
-	}
-
-	/**
-	 * Clear all stones on the viewer.
-	 */
-	public void clearStones() {
-		for (MancalaPitGraphics pitGraphics : pitGraphicsMap.values())
-			pitGraphics.getStones().clear();
-	}
-
-	/**
-	 * Populate the stones on the pits based on the model.
-	 * 
-	 * @param pitGraphicsMap
-	 *            the pits from the model.
-	 */
-	// public void populateStones(ArrayList<LinkedList<Integer>> pits) {
-	public void populateStones(EnumMap<Pit, LinkedList<Stone>> pitMap) {
-		// for (int i = 0; i < pitMap.size(); i++)
-		for (Pit pit : Pit.smallPits)
-			// for (int j = 0; j < pits.get(i).size(); j++) {
-			// for (Stone stone : pitMap.get(pit)) {
-			for (int i = 0; i < pitMap.get(pit).size(); i++) {
-				// MancalaStoneGraphics msg = new MancalaStoneGraphics(colors[pits.get(i).get(j)
-				// % pits.get(i).size()], i);
-				MancalaStoneGraphics msg = new MancalaStoneGraphics(colors[i], pit);
-				// pitGraphics[i].getStones().add(msg);
-				pitGraphicsMap.get(pit).getStones().add(msg);
-				// stones.put(pitGraphicsMap.get(pit).get(j), msg);
-				stoneMap.put(pitMap.get(pit).get(i), msg);
-			}
-
-	}
-
-	/**
-	 * Randomize all stone positions which the stones that have moved. Need to check
-	 * to make sure the stones are not too close to each other.
-	 */
-	public void updateStonePositions() {
-
-		// First check to see if the model has a list of stones...
-		if (model.getState().getStoneList() != null) {
-
-			// Check if there is a sequence from the model to animate the stones one at a
-			// time
-			if (!model.getState().getStoneSequence().isEmpty()) {
-
-				// Get the stone and its graphics info
-				Stone stone = model.getState().getStoneSequence().poll();
-				MancalaStoneGraphics stoneGraphic1 = stoneMap.get(stone);
-
-				// Remove the stone from the previous pit and put it in the next pit
-//				pitGraphicsMap[model.getStoneSequence().peek().getRight()].getStones().add(stoneGraphic1);
-				pitGraphicsMap.get(stone.getPit()).getStones().add(stoneGraphic1);
-//				pitGraphicsMap[stoneGraphic1.getPit()].getStones().remove(stoneGraphic1);
-				pitGraphicsMap.get(stoneGraphic1.getPit()).getStones().remove(stoneGraphic1);
-
-				// Update the stone's pit number and remove the stone from the queue
-				stoneGraphic1.setPit(stone.getPit());
-
-				// Tell the stone to start animating
-				stoneGraphic1.setAnimating(true);
-
-				// Randomize the stone position in its next pit while check to make sure that it
-				// is not too close to other pits
-				boolean tooClose = true;
-				while (tooClose) {
-					randomizePosition(stoneGraphic1, pitGraphicsMap.get(stoneGraphic1.getPit()).getInnerBound(), true);
-					tooClose = false;
-					for (int k = 0; k < pitGraphicsMap.get(stoneGraphic1.getPit()).getStones().size(); k++) {
-						MancalaStoneGraphics stone2 = pitGraphicsMap.get(stoneGraphic1.getPit()).getStones().get(k);
-						if (stoneGraphic1 == stone2)
-							continue;
-						if (distanceFinal(stoneGraphic1, stone2) < stoneSize / 2) {
-							tooClose = true;
-							break;
-						}
-					}
+		/**
+		 * Pit should darken when a mouse moves over it.
+		 */
+		public void mouseMoved(MouseEvent event) {
+			Point point = event.getPoint();
+			Pit pitCurrent = null;
+			for (Pit pit : Pit.values())
+				if (!isBoardStillAnimating() && pitGraphicsMap.get(pit).getOuterBound().contains(point)) {
+					pitCurrent = pit;
+					break;
 				}
-
-			}
-
-			// Otherwise animate the rest of the stones at same time
-			else {
-
-				// Go through each stone
-//				for (int i = 0; i < model.getState().getStoneList().size(); i++) {
-				for (Stone stone : model.getState().getStoneList()) {
-
-					// Check if the stone have not been updated yet
-					if (!stone.getPit().equals(stoneMap.get(stone).getPit())) {
-
-						// Get the stone's graphic info
-						MancalaStoneGraphics stone1 = stoneMap.get(stone);
-
-						// Remove the stone from the previous pit and put it in the next pit
-						pitGraphicsMap.get(stone.getPit()).getStones().add(stone1);
-//						pitGraphicsMap[stone1.getPit()].getStones().remove(stone1);
-						pitGraphicsMap.get(stone1.getPit()).getStones().remove(stone1);
-
-						// Update the stone's pit number
-//						stone1.setPit(model.getStones()[i]);
-						stone1.setPit(stone.getPit());
-
-						// Tell the stones to start animating
-						stone1.setAnimating(true);
-
-						// Randomize the stone position in its next pit while check to make sure that it
-						// is not too close to other pits
-						boolean tooClose = true;
-						while (tooClose) {
-							randomizePosition(stone1, pitGraphicsMap.get(stone1.getPit()).getInnerBound(), true);
-							tooClose = false;
-							for (int k = 0; k < pitGraphicsMap.get(stone1.getPit()).getStones().size(); k++) {
-								MancalaStoneGraphics stone2 = pitGraphicsMap.get(stone1.getPit()).getStones().get(k);
-								if (stone1 == stone2)
-									continue;
-								if (distanceFinal(stone1, stone2) < stoneSize / 2) {
-									tooClose = true;
-									break;
-								}
-							}
-						}
-
-					}
-				}
-			}
-
-		}
-	}
-
-	/**
-	 * Check if the stones are still moving around.
-	 */
-	public boolean isBoardStillAnimating() {
-		for (MancalaStoneGraphics stone : stoneMap.values())
-			if (stone.isAnimating())
-				return true;
-		return false;
-	}
-
-	// Getters and Setters
-
-	public boolean isGameStarted() {
-		return gameStarted;
-	}
-
-	public void setGameStarted(boolean gameStarted) {
-		this.gameStarted = gameStarted;
-	}
-
-	@Override
-	public void mouseClicked(MouseEvent e) {
-	}
-
-	@Override
-	public void mouseEntered(MouseEvent e) {
-	}
-
-	@Override
-	public void mouseExited(MouseEvent e) {
-	}
-
-	@Override
-	public void mousePressed(MouseEvent e) {
-	}
-
-	@Override
-	public void mouseReleased(MouseEvent event) {
-
-		// Then get the pit number the user clicked on and sow it
-		Point point = event.getPoint();
-		// for (int i = 0; i < 14; i++)
-		for (Pit pit : Pit.values())
-			if (!isBoardStillAnimating() && pitGraphicsMap.get(pit).getOuterBound().contains(point)) {
-				model.getState().sow(pit);
-				System.out.println(model.getState());
-				updateStonePositions();
-				repaint();
-				break;
-			}
-
-	}
-
-	@Override
-	public void mouseDragged(MouseEvent arg0) {
-	}
-
-	@Override
-	public void mouseMoved(MouseEvent event) {
-		Point point = event.getPoint();
-		Pit pitCurrent = null;
-//		for (int i = 0; i < 14; i++) {
-		for (Pit pit : Pit.values())
-			if (!isBoardStillAnimating() && pitGraphicsMap.get(pit).getOuterBound().contains(point)) {
-//				pit = i;
-				pitCurrent = pit;
-				break;
-			}
-		pitNoHighlight = pitCurrent;
-		repaint();
-
-	}
-
-	@Override
-	public void actionPerformed(ActionEvent arg0) {
-
-		for (Map.Entry<Stone, MancalaStoneGraphics> entry : stoneMap.entrySet()) {
-
-			MancalaStoneGraphics stone = entry.getValue();
-
-			// Check if any of the stones are animating
-			if (stone.isAnimating()) {
-				if (stone.getDiffX() * (stone.getRandX() - stone.getNextX()) > 0
-						&& stone.getDiffY() * (stone.getRandY() - stone.getNextY()) > 0) {
-					stone.setX(stone.getNextX());
-					stone.setY(stone.getNextY());
-					stone.setNextX(stone.getNextX() + stone.getSegmentX());
-					stone.setNextY(stone.getNextY() + stone.getSegmentY());
-				} else {
-					stone.setX(stone.getRandX());
-					stone.setY(stone.getRandY());
-					stone.setAnimating(false);
-					updateStonePositions();
-				}
-				repaint();
-			}
-
+			pitNoHighlight = pitCurrent;
+			revalidate();
+			repaint();
 		}
 
 	}
