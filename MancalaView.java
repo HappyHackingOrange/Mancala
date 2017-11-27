@@ -15,10 +15,10 @@ public class MancalaView extends JFrame {
 
 	// Constants
 	private static final Font fontStatus = new Font("SansSerif", Font.BOLD, 36);
-	private static final Border blackline = BorderFactory.createLineBorder(Color.black);
+//	private static final Border blackline = BorderFactory.createLineBorder(Color.black);
 
 	// Instance Variables
-	private MancalaBoardPanel board;
+	private MancalaBoardPanel boardPanel;
 	private JButton buttonStart;
 	private JButton buttonUndo;
 	private ButtonGroup bg;
@@ -26,9 +26,6 @@ public class MancalaView extends JFrame {
 
 	// Constructor
 	public MancalaView(MancalaModel model) {
-
-		// Set up default strategy patterns
-		boardFormatter = new MancalaBoardStandard();
 
 		// JPanel content = new JPanel();
 		Box content = Box.createHorizontalBox();
@@ -81,8 +78,8 @@ public class MancalaView extends JFrame {
 			public void itemStateChanged(ItemEvent event) {
 				if (event.getStateChange() == ItemEvent.SELECTED) {
 					changeBoardStyle((String) boardTypeComboBox.getSelectedItem());
-					board.revalidate();
-					board.repaint();
+					boardPanel.revalidate();
+					boardPanel.repaint();
 				}
 			}
 		});
@@ -107,11 +104,14 @@ public class MancalaView extends JFrame {
 		statusLabelBox.add(statusLabel);
 
 		// Make a new board at the left panel
-		board = new MancalaBoardPanel(model, boardFormatter, statusLabel);
+		boardPanel = new MancalaBoardPanel(model, boardFormatter, statusLabel);
+
+		// Set up default strategy patterns
+		boardFormatter = new MancalaBoardStandard(boardPanel);
 
 		// Put board and start/undo button in one box
 		Box leftBox = Box.createVerticalBox();
-		leftBox.add(board);
+		leftBox.add(boardPanel);
 
 		// Bottom panel, status label and push buttons
 		JPanel bottomPanel = new JPanel();
@@ -119,24 +119,24 @@ public class MancalaView extends JFrame {
 		buttonStart = new JButton("Start");
 		buttonStart.addActionListener(event -> {
 			model.getState().setupGame(Integer.parseInt(bg.getSelection().getActionCommand()));
-			board.setupGraphics();
-			board.setGameStarted(true);
-			board.repaint();
+			boardPanel.setupGraphics();
+			boardPanel.setGameStarted(true);
+			boardPanel.repaint();
 		});
 		buttonUndo = new JButton("Undo");
 		buttonUndo.addActionListener(event -> {
-			if (board.getPreviousState() != null) {
+			if (boardPanel.getPreviousState() != null) {
 				model.setState(model.getPreviousState());
-				board.getTimer().stop();
-				leftBox.remove(board);
+				boardPanel.getTimer().stop();
+				leftBox.remove(boardPanel);
 				leftBox.remove(bottomPanel);
-				board = board.getPreviousState();
-				leftBox.add(board);
+				boardPanel = boardPanel.getPreviousState();
+				leftBox.add(boardPanel);
 				leftBox.add(bottomPanel);
-				board.getTimer().start();
+				boardPanel.getTimer().start();
 				changeBoardStyle((String) boardTypeComboBox.getSelectedItem());
-				board.revalidate();
-				board.repaint();
+				boardPanel.revalidate();
+				boardPanel.repaint();
 			}
 		});
 		buttonStart.setPreferredSize(new Dimension(80, 40));
@@ -175,7 +175,7 @@ public class MancalaView extends JFrame {
 	}
 
 	public MancalaBoardPanel getBoard() {
-		return board;
+		return boardPanel;
 	}
 
 	/**
@@ -187,24 +187,24 @@ public class MancalaView extends JFrame {
 		boolean boardStyleChanged = false;
 		switch (boardStyle) {
 		case ("Standard"):
-			if (!(board.getBoardFormatter() instanceof MancalaBoardStandard)) {
+			if (!(boardPanel.getBoardFormatter() instanceof MancalaBoardStandard)) {
 				boardStyleChanged = true;
-				boardFormatter = new MancalaBoardStandard();
-				board.setBoardFormatter(boardFormatter);
+				boardFormatter = new MancalaBoardStandard(boardPanel);
+				boardPanel.setBoardFormatter(boardFormatter);
 
 			}
 			break;
 		case ("Sharp"):
-			if (!(board.getBoardFormatter() instanceof MancalaBoardSharp)) {
+			if (!(boardPanel.getBoardFormatter() instanceof MancalaBoardSharp)) {
 				boardStyleChanged = true;
-				boardFormatter = new MancalaBoardSharp();
-				board.setBoardFormatter(boardFormatter);
+				boardFormatter = new MancalaBoardSharp(boardPanel);
+				boardPanel.setBoardFormatter(boardFormatter);
 			}
 			break;
 		}
 		if (boardStyleChanged) {
-			boardFormatter.drawBoard(board);
-			board.randomizeAllPositions();
+			boardFormatter.drawBoard();
+			boardPanel.randomizeAllPositions();
 		}
 
 	}

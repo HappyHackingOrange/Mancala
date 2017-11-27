@@ -13,11 +13,20 @@ public class MancalaBoardSharp implements MancalaBoardFormatter {
 	private static final int WIDTH = 1000;
 	private static final int HEIGHT = 400;
 
+	// Instance variables
+	MancalaBoardPanel boardPanel;
+
+	//Constructor
+	public MancalaBoardSharp(MancalaBoardPanel boardPanel) {
+		this.boardPanel = boardPanel;
+	}
+
+
 	/**
 	 * Draw the standard Mancala board.
 	 */
 	@Override
-	public void drawBoard(MancalaBoardPanel boardPanel) {
+	public void drawBoard() {
 
 		boardPanel.setPreferredSize(new Dimension(WIDTH, HEIGHT));
 
@@ -88,7 +97,7 @@ public class MancalaBoardSharp implements MancalaBoardFormatter {
 	 * Set the preferred size for the board panel.
 	 */
 	@Override
-	public void setPreferredSize(MancalaBoardPanel boardPanel) {
+	public void setPreferredSize() {
 		boardPanel.setPreferredSize(new Dimension(WIDTH, HEIGHT));
 	}
 }

@@ -14,13 +14,13 @@ import javax.swing.Timer;
  */
 public class MancalaBoardPanel extends JPanel implements ActionListener {
 
-	// Constant variables
+	// Constants
 	private static final long serialVersionUID = 1L;
-	private final Color[] colors = new Color[] { new Color(0xF16A70), new Color(0xB1D877), new Color(0x8CDCDA),
+	private static final Color[] colors = new Color[] { new Color(0xF16A70), new Color(0xB1D877), new Color(0x8CDCDA),
 			new Color(0x4D4D4D) };
-	private final int DELAY = 11;
-	private final double stoneSize = 30;
-	private final boolean hasOutlines = true;
+	private static final int DELAY = 11;
+	private static final double stoneSize = 30;
+	private static final boolean hasOutlines = true;
 
 	// Instance variables
 	private MancalaModel model;
@@ -49,7 +49,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		this.statusLabel = statusLabel;
 
 		// Call the strategy pattern to draw a specific style of the board
-		boardFormatter.drawBoard(this);
+		boardFormatter.drawBoard();
 
 		// Listen for any mouse actions
 		addMouseListener(new MouseReleasedListener());
@@ -66,7 +66,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		model = boardPanel.model;
 		board = boardPanel.board;
 		boardFormatter = boardPanel.boardFormatter;
-		boardFormatter.setPreferredSize(this);
+		boardFormatter.setPreferredSize();
 		statusLabel = boardPanel.statusLabel;
 		pitGraphicsMap = new EnumMap<>(Pit.class);
 		for (Pit pit : Pit.values())

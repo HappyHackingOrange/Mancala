@@ -7,6 +7,6 @@ import java.awt.geom.*;
  *
  */
 public interface MancalaBoardFormatter {
-	public void drawBoard(MancalaBoardPanel boardPanel);
-	public void setPreferredSize(MancalaBoardPanel boardPanel);
+	public void drawBoard();
+	public void setPreferredSize();
 }
