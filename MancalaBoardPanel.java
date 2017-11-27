@@ -133,7 +133,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 	 */
 	public void setupGraphics() {
 		emptyAllPitGraphics();
-		populateStones(model.getState().getStoneListMap());
+		populateStones(model.getState().getPitMap());
 		randomizeAllPositions();
 	}
 
@@ -321,7 +321,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 	public void updateStonePositions(boolean animate) {
 
 		// First check to see if the model has a list of stones...
-		if (model.getState().getPitLookupTable() != null) {
+		if (model.getState().getStoneMap() != null) {
 
 			// Check if there is animating sequence from the model
 			if (!model.getState().getStoneSequence().isEmpty()) {
@@ -331,7 +331,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 
 			// Otherwise animate the rest of the stones at same time
 			else
-				for (Map.Entry<Stone, Pit> entry : model.getState().getPitLookupTable().entrySet()) {
+				for (Map.Entry<Stone, Pit> entry : model.getState().getStoneMap().entrySet()) {
 					Stone stone = entry.getKey();
 					Pit pit = entry.getValue();
 					if (!pit.equals(stoneGraphicsMap.get(stone).getPit()))
@@ -416,8 +416,8 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		if (isBoardStillAnimating())
 			statusLabel.setText("Sowing the stones...");
 		else if (model.getState().isGameOver()) {
-			int playerAScore = model.getState().getStoneListMap().get(Pit.MANCALA_A).size();
-			int playerBScore = model.getState().getStoneListMap().get(Pit.MANCALA_B).size();
+			int playerAScore = model.getState().getPitMap().get(Pit.MANCALA_A).size();
+			int playerBScore = model.getState().getPitMap().get(Pit.MANCALA_B).size();
 			if (playerAScore > playerBScore)
 				statusLabel.setText(String.format("Player %s won the game!", Player.A));
 			else if (playerAScore < playerBScore)
