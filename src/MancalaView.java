@@ -193,6 +193,24 @@ public class MancalaView extends JFrame {
 			boardPanel.setupGraphics();
 			boardPanel.setGameStarted(true);
 			boardPanel.repaint();
+			String playerAType = (String) playerAComboBox.getSelectedItem();
+			switch (playerAType) {
+			case ("Human"):
+				boardPanel.getPlayerMap().put(Player.A, true);
+				break;
+			case ("Computer"):
+				boardPanel.getPlayerMap().put(Player.A, false);
+				break;
+			}
+			String playerBType = (String) playerBComboBox.getSelectedItem();
+			switch (playerBType) {
+			case ("Human"):
+				boardPanel.getPlayerMap().put(Player.B, true);
+				break;
+			case ("Computer"):
+				boardPanel.getPlayerMap().put(Player.B, false);
+				break;
+			}
 		});
 		buttonUndo = new JButton("Undo");
 		buttonUndo.addActionListener(event -> {
