@@ -9,7 +9,7 @@ import java.util.*;
 public class MancalaGameState {
 
 	// Instance variables
-	private Pit sowedPit;
+//	private Pit sowedPit;
 	private EnumMap<Pit, LinkedList<Stone>> pitMap;
 	private Player playerTurn;
 	private boolean isGameOver;
@@ -21,7 +21,7 @@ public class MancalaGameState {
 
 	// Constructor
 	public MancalaGameState() {
-		sowedPit = null;
+//		sowedPit = null;
 		pitMap = new EnumMap<>(Pit.class);
 		for (Pit pit : Pit.values())
 			pitMap.put(pit, new LinkedList<>());
@@ -35,7 +35,7 @@ public class MancalaGameState {
 
 	// Copy-constructor
 	public MancalaGameState(MancalaGameState state) {
-		sowedPit = state.sowedPit;
+//		sowedPit = state.sowedPit;
 		pitMap = new EnumMap<>(Pit.class);
 		stoneMap = new HashMap<>(state.stoneMap);
 		for (Pit pit : Pit.values()) {
@@ -362,7 +362,7 @@ public class MancalaGameState {
 			finiteState = (isHuman) ? 0 : 3;
 			break;
 		}
-		if (finiteState == 0 && finiteState == 1) {
+		if (finiteState == 0 || finiteState == 1) {
 			previousState = new MancalaGameState(this);
 			return true;
 		}
