@@ -91,6 +91,51 @@ public class MancalaView extends JFrame {
 		boardTypeBox.add(boardTypeComboBox);
 		boardTypeBox.setBorder(new EmptyBorder(10, 10, 10, 10));
 
+		// User can pick whether to play PvP, Player vs Computer, or Computer vs
+		// Computer
+
+		// For player A
+		JLabel playerALabel = new JLabel("Player A:");
+		Box playerALabelBox = Box.createHorizontalBox();
+		playerALabelBox.add(playerALabel);
+		playerALabelBox.add(Box.createHorizontalGlue());
+		JComboBox playerAComboBox = new JComboBox() {
+			@Override
+			public Dimension getMaximumSize() {
+				Dimension max = super.getMaximumSize();
+				max.height = getPreferredSize().height;
+				return max;
+			}
+		};
+		playerAComboBox.addItem("Human");
+		playerAComboBox.addItem("Computer");
+		playerAComboBox.setSelectedIndex(0);
+		Box playerABox = Box.createVerticalBox();
+		playerABox.add(playerALabelBox);
+		playerABox.add(playerAComboBox);
+		playerABox.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+		// For player A
+		JLabel playerBLabel = new JLabel("Player B:");
+		Box playerBLabelBox = Box.createHorizontalBox();
+		playerBLabelBox.add(playerBLabel);
+		playerBLabelBox.add(Box.createHorizontalGlue());
+		JComboBox playerBComboBox = new JComboBox() {
+			@Override
+			public Dimension getMaximumSize() {
+				Dimension max = super.getMaximumSize();
+				max.height = getPreferredSize().height;
+				return max;
+			}
+		};
+		playerBComboBox.addItem("Human");
+		playerBComboBox.addItem("Computer");
+		playerBComboBox.setSelectedIndex(1);
+		Box playerBBox = Box.createVerticalBox();
+		playerBBox.add(playerBLabelBox);
+		playerBBox.add(playerBComboBox);
+		playerBBox.setBorder(new EmptyBorder(10, 10, 10, 10));
+
 		// Add panel with start and undo buttons at upper left corner
 		Box optionsBox = Box.createVerticalBox();
 		optionsBox.add(Box.createGlue());
@@ -98,10 +143,14 @@ public class MancalaView extends JFrame {
 		optionsBox.add(Box.createGlue());
 		optionsBox.add(boardTypeBox);
 		optionsBox.add(Box.createGlue());
+		optionsBox.add(playerABox);
+		optionsBox.add(Box.createGlue());
+		optionsBox.add(playerBBox);
+		optionsBox.add(Box.createGlue());
 		optionsBox.setBorder(BorderFactory.createTitledBorder("Options"));
 
 		// Label to tell whose turn or the status of the game
-		JLabel statusLabel = new JLabel();
+		JLabel statusLabel = new JLabel("", SwingConstants.CENTER);
 		statusLabel.setFont(fontStatus);
 		Box statusLabelBox = Box.createHorizontalBox();
 		statusLabelBox.add(statusLabel);
@@ -123,6 +172,24 @@ public class MancalaView extends JFrame {
 		buttonStart = new JButton("Start");
 		buttonStart.addActionListener(event -> {
 			model.getState().setupGame(Integer.parseInt(bg.getSelection().getActionCommand()));
+			String playerAType = (String) playerAComboBox.getSelectedItem();
+			switch (playerAType) {
+			case ("Human"):
+				boardPanel.getPlayerMap().put(Player.A, true);
+				break;
+			case ("Computer"):
+				boardPanel.getPlayerMap().put(Player.A, false);
+				break;
+			}
+			String playerBType = (String) playerBComboBox.getSelectedItem();
+			switch (playerBType) {
+			case ("Human"):
+				boardPanel.getPlayerMap().put(Player.B, true);
+				break;
+			case ("Computer"):
+				boardPanel.getPlayerMap().put(Player.B, false);
+				break;
+			}
 			boardPanel.setupGraphics();
 			boardPanel.setGameStarted(true);
 			boardPanel.repaint();

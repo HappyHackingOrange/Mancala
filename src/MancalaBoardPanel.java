@@ -23,15 +23,16 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 	// Instance variables
 	private MancalaModel model;
 	private EnumMap<Pit, MancalaPitGraphics> pitGraphicsMap;
+	private EnumMap<Player, Boolean> playerMap; // Whether to know if a player is human or computer
 	private Map<Stone, Tuple<MancalaStoneGraphics>> stoneGraphicsMap;
 	private boolean gameStarted;
+	private int computerTurnsInARow;
 	private Pit pitNoHighlight; // the pit to highlight when mouse is over the pit
 	private Timer timer;
 	private MancalaBoardPanel previousState;
 	private MancalaBoardFormatter boardFormatter;
 	private JLabel statusLabel;
 	private Player playerTurn;
-	private EnumMap<Player, Boolean> playerMap; // Whether to know if a player is human or computer
 
 	// Constructors
 	public MancalaBoardPanel(MancalaModel model, MancalaBoardFormatter boardFormatter, JLabel statusLabel) {
@@ -47,6 +48,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		this.boardFormatter = boardFormatter;
 		this.statusLabel = statusLabel;
 		playerMap = new EnumMap<>(Player.class);
+		computerTurnsInARow = 0;
 
 		// Call the strategy pattern to draw a specific style of the board
 		boardFormatter.setBoardPanel(this);
@@ -84,6 +86,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		previousState = null;
 		playerTurn = boardPanel.playerTurn;
 		playerMap = boardPanel.playerMap;
+		computerTurnsInARow = 0;
 		addMouseListener(new MouseReleasedListener());
 		addMouseMotionListener(new MouseMovedListener());
 		timer = new Timer(DELAY, this);
@@ -129,6 +132,10 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 
 	public Map<Stone, Tuple<MancalaStoneGraphics>> getStoneGraphicsMap() {
 		return stoneGraphicsMap;
+	}
+
+	public EnumMap<Player, Boolean> getPlayerMap() {
+		return playerMap;
 	}
 
 	/**
@@ -441,10 +448,31 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 			else
 				statusLabel.setText("Game ended in draw.");
 		} else {
-			if (isGameStarted())
-				statusLabel
-						.setText(String.format("It's player %s's turn. Pick a pit.", model.getState().getPlayerTurn()));
-			else
+			if (isGameStarted()) {
+				playerTurn = model.getState().getPlayerTurn();
+				if (playerTurn == Player.A && !playerMap.get(Player.A)
+						|| playerTurn == Player.B && !playerMap.get(Player.B)) {
+
+					computerTurnsInARow++;
+
+					statusLabel.setText(String.format("Player %s is thinking...", model.getState().getPlayerTurn()));
+					statusLabel.paintImmediately(statusLabel.getVisibleRect());
+
+					// AI carefully selects a pit
+					model.getState().sow(model.minimax(8));
+
+					// // AI randomly selects a pit
+					// EnumSet<Pit> sowablePits = model.getState().getSowablePits();
+					// model.getState().sow((Pit) sowablePits.toArray()[new
+					// Random().nextInt(sowablePits.size())]);
+
+					model.getState().checkIfGameEnded();
+					updateStonePositions(true);
+
+				} else {
+					statusLabel.setText(String.format("It's player %s's turn. Pick a pit.", playerTurn));
+				}
+			} else
 				statusLabel.setText("Welcome to the game of Mancala!");
 		}
 
@@ -513,10 +541,16 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 						&& model.getState().getSowablePits().contains(pit)
 						&& pitGraphicsMap.get(pit).getOuterBound().contains(point)) {
 					playerTurn = model.getState().getPlayerTurn();
-					boolean shouldSaveState = model.getState().shouldISaveGameState(true);
+					boolean shouldSaveState = false;
+					if (computerTurnsInARow == 0) {
+						model.getState().savePreviousState();
+						shouldSaveState = true;
+					} else {
+						computerTurnsInARow = 0;
+					}
 					model.getState().sow(pit);
 					model.getState().checkIfGameEnded();
-//					if (shouldSaveState)
+					if (shouldSaveState)
 						previousState = new MancalaBoardPanel(MancalaBoardPanel.this);
 					updateStonePositions(true);
 					break;

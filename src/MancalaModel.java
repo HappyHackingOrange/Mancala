@@ -158,7 +158,7 @@ public class MancalaModel {
 			totalGames += gameCounter;
 			gameCounter = 0;
 		}
-		System.out.printf("Total games analyzed: %d%n", totalGames);
+		out.printf("Total games analyzed: %d%n", totalGames);
 
 		return bestMove.x;
 

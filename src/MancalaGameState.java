@@ -9,7 +9,7 @@ import java.util.*;
 public class MancalaGameState {
 
 	// Instance variables
-//	private Pit sowedPit;
+	// private Pit sowedPit;
 	private EnumMap<Pit, LinkedList<Stone>> pitMap;
 	private Player playerTurn;
 	private boolean isGameOver;
@@ -21,7 +21,7 @@ public class MancalaGameState {
 
 	// Constructor
 	public MancalaGameState() {
-//		sowedPit = null;
+		// sowedPit = null;
 		pitMap = new EnumMap<>(Pit.class);
 		for (Pit pit : Pit.values())
 			pitMap.put(pit, new LinkedList<>());
@@ -35,7 +35,7 @@ public class MancalaGameState {
 
 	// Copy-constructor
 	public MancalaGameState(MancalaGameState state) {
-//		sowedPit = state.sowedPit;
+		// sowedPit = state.sowedPit;
 		pitMap = new EnumMap<>(Pit.class);
 		stoneMap = new HashMap<>(state.stoneMap);
 		for (Pit pit : Pit.values()) {
@@ -49,7 +49,7 @@ public class MancalaGameState {
 			previousState = new MancalaGameState(state.previousState);
 		stoneSequence = new LinkedList<>(state.stoneSequence);
 		initStones = state.initStones;
-		finiteState = 0;
+		finiteState = state.finiteState;
 	}
 
 	// Getters and setters
@@ -84,6 +84,10 @@ public class MancalaGameState {
 
 	public MancalaGameState getPreviousState() {
 		return previousState;
+	}
+	
+	public void savePreviousState() {
+		previousState = new MancalaGameState(this);
 	}
 
 	public int getInitStones() {
@@ -250,16 +254,6 @@ public class MancalaGameState {
 	// public boolean sow(Pit pit, boolean isHuman) {
 	public boolean sow(Pit pit) {
 
-		// // Check if the pit is sowable.
-		// if (!getSowablePits().contains(pit))
-		// return false;
-
-		// // Update the state.
-		// sowedPit = pit;
-
-		// Save the state as the previous state before modifying it.
-		// shouldISaveGameState(isHuman);
-
 		// Check for player's turn to run proper subroutine.
 		switch (playerTurn) {
 
@@ -337,36 +331,6 @@ public class MancalaGameState {
 
 		}
 
-	}
-
-	/**
-	 * Uses Finite State Machine (FSM) to determine to whether to save previous
-	 * state or not if an opponent is AI.
-	 * 
-	 * @param isHuman
-	 *            whether the player is human or not.
-	 * @return whether the state should be saved or not
-	 */
-	public boolean shouldISaveGameState(boolean isHuman) {
-		switch (finiteState) {
-		case (0):
-			finiteState = (isHuman) ? 0 : 1;
-			break;
-		case (1):
-			finiteState = (isHuman) ? 2 : 3;
-			break;
-		case (2):
-			finiteState = (isHuman) ? 0 : 1;
-			break;
-		case (3):
-			finiteState = (isHuman) ? 0 : 3;
-			break;
-		}
-		if (finiteState == 0 || finiteState == 1) {
-			previousState = new MancalaGameState(this);
-			return true;
-		}
-		return false;
 	}
 
 	/**
