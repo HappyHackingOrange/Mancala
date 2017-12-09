@@ -512,7 +512,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 				if (!isBoardStillAnimating() && !model.getState().getSowablePits().isEmpty()
 						&& model.getState().getSowablePits().contains(pit)
 						&& pitGraphicsMap.get(pit).getOuterBound().contains(point)) {
-//					playerTurn = model.getState().getPlayerTurn();
+					playerTurn = model.getState().getPlayerTurn();
 					boolean shouldSaveState = model.getState().shouldISaveGameState(true);
 					model.getState().sow(pit);
 					model.getState().checkIfGameEnded();
