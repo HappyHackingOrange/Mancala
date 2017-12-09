@@ -45,8 +45,8 @@ public class MancalaModel {
 	}
 
 	/**
-	 * Use depth-first search to build a game tree of all possible Mancala moves to
-	 * be used with minmax algorithm to find best moves.
+	 * Build a game tree of all possible Mancala moves (this algorithm will take
+	 * forever and eat up all your PC memory, don't use it)
 	 * 
 	 * @param root
 	 *            the root node to grow a game tree.
@@ -107,6 +107,25 @@ public class MancalaModel {
 
 		}
 
+	}
+
+	/**
+	 * Write the game tree to file by serialization
+	 * 
+	 * @param filename
+	 *            the name of the file to write the game tree to
+	 */
+	public void saveGameTree(String filename) {
+		try {
+			FileOutputStream file = new FileOutputStream(filename);
+			ObjectOutputStream output = new ObjectOutputStream(file);
+			output.writeObject(filename);
+			output.close();
+			file.close();
+		} catch (IOException e) {
+			System.out.println("Unable to write to " + filename);
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -206,25 +225,6 @@ public class MancalaModel {
 
 			return bestMove;
 
-		}
-	}
-
-	/**
-	 * Write the game tree to file by serialization
-	 * 
-	 * @param filename
-	 *            the name of the file to write the game tree to
-	 */
-	public void saveGameTree(String filename) {
-		try {
-			FileOutputStream file = new FileOutputStream(filename);
-			ObjectOutputStream output = new ObjectOutputStream(file);
-			output.writeObject(filename);
-			output.close();
-			file.close();
-		} catch (IOException e) {
-			System.out.println("Unable to write to " + filename);
-			e.printStackTrace();
 		}
 	}
 

@@ -11,12 +11,14 @@ import java.util.*;
 public class MancalaStoneGraphics {
 
 	// Instance variables
-	final static double frames = 30;
+	private final static double frames = 30;
 	
 	// Instance variables;
 	private double x;
 	private double y;
 	private Color color;
+	private int coinSide;
+	private double coinAngle;
 
 	// For animation
 	private boolean isAnimating;
@@ -35,6 +37,8 @@ public class MancalaStoneGraphics {
 		y = 0;
 		this.color = color;
 		isAnimating = false;
+		coinSide = (int) Math.round(Math.random());
+		coinAngle = 2 * Math.PI * Math.random();
 	}
 	
 	// Copy-Constructor
@@ -42,6 +46,8 @@ public class MancalaStoneGraphics {
 		x = stoneGraphics.x;
 		y = stoneGraphics.y;
 		color = stoneGraphics.color;
+		coinSide = stoneGraphics.coinSide;
+		coinAngle = stoneGraphics.coinAngle;
 		isAnimating = stoneGraphics.isAnimating;
 		randX = stoneGraphics.randX;
 		randY = stoneGraphics.randY;
@@ -157,6 +163,14 @@ public class MancalaStoneGraphics {
 
 	public void setRandY(double randY) {
 		this.randY = randY;
+	}
+
+	public int getCoinSide() {
+		return coinSide;
+	}
+
+	public double getCoinAngle() {
+		return coinAngle;
 	}
 
 	/**

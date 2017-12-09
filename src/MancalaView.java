@@ -14,8 +14,8 @@ import javax.swing.border.*;
 public class MancalaView extends JFrame {
 
 	// Constants
+	private static final long serialVersionUID = 1L;
 	private static final Font fontStatus = new Font("SansSerif", Font.BOLD, 36);
-//	private static final Border blackline = BorderFactory.createLineBorder(Color.black);
 
 	// Instance Variables
 	private MancalaBoardPanel boardPanel;
@@ -55,7 +55,7 @@ public class MancalaView extends JFrame {
 		initStoneBox.setBorder(new EmptyBorder(10, 10, 10, 10));
 
 		// Panel with combo box to ask for board type
-		JLabel boardTypeLabel = new JLabel("Board style:");
+		JLabel boardTypeLabel = new JLabel("Style:");
 		Box boardTypeLabelBox = Box.createHorizontalBox();
 		boardTypeLabelBox.add(boardTypeLabel);
 		boardTypeLabelBox.add(Box.createHorizontalGlue());
@@ -72,6 +72,7 @@ public class MancalaView extends JFrame {
 		};
 		boardTypeComboBox.addItem("Standard");
 		boardTypeComboBox.addItem("Sharp");
+		boardTypeComboBox.addItem("Egg Carton");
 		boardTypeComboBox.setSelectedIndex(0);
 		boardTypeComboBox.addItemListener(new ItemListener() {
 			@Override
@@ -80,6 +81,8 @@ public class MancalaView extends JFrame {
 					changeBoardStyle((String) boardTypeComboBox.getSelectedItem());
 					boardPanel.revalidate();
 					boardPanel.repaint();
+					pack();
+					setLocationRelativeTo(null); // Center the window
 				}
 			}
 		});
@@ -191,19 +194,24 @@ public class MancalaView extends JFrame {
 			if (!(boardPanel.getBoardFormatter() instanceof MancalaBoardStandard)) {
 				boardStyleChanged = true;
 				boardFormatter = new MancalaBoardStandard(boardPanel);
-				boardPanel.setBoardFormatter(boardFormatter);
 			}
 			break;
 		case ("Sharp"):
 			if (!(boardPanel.getBoardFormatter() instanceof MancalaBoardSharp)) {
 				boardStyleChanged = true;
 				boardFormatter = new MancalaBoardSharp(boardPanel);
-				boardPanel.setBoardFormatter(boardFormatter);
+			}
+			break;
+		case ("Egg Carton"):
+			if (!(boardPanel.getBoardFormatter() instanceof MancalaBoardEggCarton)) {
+				boardStyleChanged = true;
+				boardFormatter = new MancalaBoardEggCarton(boardPanel);
 			}
 			break;
 		}
 		if (boardStyleChanged) {
-			boardFormatter.drawBoard();
+			boardPanel.setBoardFormatter(boardFormatter);
+			boardFormatter.createShapes();
 			boardPanel.randomizeAllPositions();
 		}
 

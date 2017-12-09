@@ -9,7 +9,13 @@ import java.awt.geom.*;
  */
 public interface MancalaBoardFormatter {
 	public void setBoardPanel(MancalaBoardPanel boardPanel);
-	public void drawBoard();
+	public MancalaBoardFormatter cloneThis();
+	public void createShapes();
 	public void setPreferredSize();
+	public double getStoneSize();
+	public void drawBoard(Graphics2D g2);
 	public void colorBoard(Graphics2D g2);
+	public void drawLabelsPit(Graphics2D g2);
+	public void drawStones(Graphics2D g2);
+	public void drawLabelsNumberOfStonesPerPit(Graphics2D g2);
 }

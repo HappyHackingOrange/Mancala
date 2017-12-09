@@ -17,18 +17,11 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 	// Constants
 	private static final long serialVersionUID = 1L;
 	private static final int DELAY = 11;
-	private static final boolean hasOutlines = true;
-	private static final Font fontLabelSmallPits = new Font("SansSerif", Font.BOLD, 50);
-	private static final Font fontLabelMancalas = new Font("SansSerif", Font.BOLD, 25);
-	private static final Composite c_trans = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, .4f);
-	private static final Composite c_reg = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1f);
-	private static final double stoneSize = 30;
 	private static final Color[] colors = new Color[] { new Color(0xF16A70), new Color(0xB1D877), new Color(0x8CDCDA),
 			new Color(0x4D4D4D) };
 
 	// Instance variables
 	private MancalaModel model;
-	private RectangularShape board;
 	private EnumMap<Pit, MancalaPitGraphics> pitGraphicsMap;
 	private Map<Stone, Tuple<MancalaStoneGraphics>> stoneGraphicsMap;
 	private boolean gameStarted;
@@ -37,6 +30,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 	private MancalaBoardPanel previousState;
 	private MancalaBoardFormatter boardFormatter;
 	private JLabel statusLabel;
+	private Player playerTurn;
 
 	// Constructors
 	public MancalaBoardPanel(MancalaModel model, MancalaBoardFormatter boardFormatter, JLabel statusLabel) {
@@ -54,7 +48,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 
 		// Call the strategy pattern to draw a specific style of the board
 		boardFormatter.setBoardPanel(this);
-		boardFormatter.drawBoard();
+		boardFormatter.createShapes();
 
 		// Listen for any mouse actions
 		addMouseListener(new MouseReleasedListener());
@@ -69,8 +63,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 	// Copy-constructor. Used to save states.
 	public MancalaBoardPanel(MancalaBoardPanel boardPanel) {
 		model = boardPanel.model;
-		board = boardPanel.board;
-		boardFormatter = boardPanel.boardFormatter;
+		boardFormatter = boardPanel.boardFormatter.cloneThis();
 		boardFormatter.setBoardPanel(this);
 		boardFormatter.setPreferredSize();
 		statusLabel = boardPanel.statusLabel;
@@ -87,6 +80,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		}
 		gameStarted = boardPanel.gameStarted;
 		previousState = null;
+		playerTurn = boardPanel.playerTurn;
 		addMouseListener(new MouseReleasedListener());
 		addMouseMotionListener(new MouseMovedListener());
 		timer = new Timer(DELAY, this);
@@ -110,20 +104,8 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		return timer;
 	}
 
-	public RectangularShape getBoard() {
-		return board;
-	}
-
-	public void setBoard(RectangularShape board) {
-		this.board = board;
-	}
-
 	public EnumMap<Pit, MancalaPitGraphics> getPitGraphicsMap() {
 		return pitGraphicsMap;
-	}
-
-	public double getStoneSize() {
-		return stoneSize;
 	}
 
 	public MancalaBoardFormatter getBoardFormatter() {
@@ -140,6 +122,10 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 
 	public Pit getPitNoHighlight() {
 		return pitNoHighlight;
+	}
+
+	public Map<Stone, Tuple<MancalaStoneGraphics>> getStoneGraphicsMap() {
+		return stoneGraphicsMap;
 	}
 
 	/**
@@ -171,15 +157,19 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 				// previous randomized stones.
 				for (int j = 1; j < pitGraphicsMap.get(pit).getStoneList().size(); j++) {
 					Stone stone1 = pitGraphicsMap.get(pit).getStoneList().get(j);
-					boolean tooClose = true;
-					while (tooClose) {
+					if (boardFormatter instanceof MancalaBoardEggCarton) {
 						randomizePosition(stone1, pitGraphicsMap.get(pit).getInnerBound(), false);
-						tooClose = false;
-						for (int k = 0; k < j; k++) {
-							Stone stone2 = pitGraphicsMap.get(pit).getStoneList().get(k);
-							if (distance(stone1, stone2) < stoneSize / 2) {
-								tooClose = true;
-								break;
+					} else {
+						boolean tooClose = true;
+						while (tooClose) {
+							randomizePosition(stone1, pitGraphicsMap.get(pit).getInnerBound(), false);
+							tooClose = false;
+							for (int k = 0; k < j; k++) {
+								Stone stone2 = pitGraphicsMap.get(pit).getStoneList().get(k);
+								if (distance(stone1, stone2) < boardFormatter.getStoneSize() / 2) {
+									tooClose = true;
+									break;
+								}
 							}
 						}
 					}
@@ -210,8 +200,8 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		}
 
 		// The stone position is located at the upper left corner
-		randX -= stoneSize / 2;
-		randY -= stoneSize / 2;
+		randX -= boardFormatter.getStoneSize() / 2;
+		randY -= boardFormatter.getStoneSize() / 2;
 
 		if (animate) {
 			stoneGraphicsMap.get(stone).getStoneComponent().queueAnimating(randX, randY);
@@ -374,15 +364,19 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		// Randomize the stone position in its next pit while check to make sure that it
 		// is not too close to other pits
 		boolean tooClose = true;
-		while (tooClose) {
+		if (boardFormatter instanceof MancalaBoardEggCarton) {
 			randomizePosition(stone, pitGraphicsMap.get(pit).getInnerBound(), animate);
-			tooClose = false;
-			for (Stone stoneOther : pitGraphicsMap.get(pit).getStoneList()) {
-				if (stone == stoneOther)
-					continue;
-				if (distanceFinal(stone, stoneOther) < stoneSize / 2) {
-					tooClose = true;
-					break;
+		} else {
+			while (tooClose) {
+				randomizePosition(stone, pitGraphicsMap.get(pit).getInnerBound(), animate);
+				tooClose = false;
+				for (Stone stoneOther : pitGraphicsMap.get(pit).getStoneList()) {
+					if (stone == stoneOther)
+						continue;
+					if (distanceFinal(stone, stoneOther) < boardFormatter.getStoneSize() / 2) {
+						tooClose = true;
+						break;
+					}
 				}
 			}
 		}
@@ -427,9 +421,14 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		}
 
 		// Let the players know the status of the game
-		if (isBoardStillAnimating())
-			statusLabel.setText("Sowing the stones...");
-		else if (model.getState().isGameOver()) {
+		if (isBoardStillAnimating()) {
+			if (pitNoHighlight != null)
+				pitNoHighlight = null;
+			if (boardFormatter instanceof MancalaBoardEggCarton)
+				statusLabel.setText(String.format("Player %s is sowing the pennies...", playerTurn));
+			else
+				statusLabel.setText(String.format("Player %s is sowing the stones...", playerTurn));
+		} else if (model.getState().isGameOver()) {
 			int playerAScore = model.getState().getPitMap().get(Pit.MANCALA_A).size();
 			int playerBScore = model.getState().getPitMap().get(Pit.MANCALA_B).size();
 			if (playerAScore > playerBScore)
@@ -448,95 +447,27 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 
 	}
 
+	/**
+	 * Updates the board graphics.
+	 */
 	@Override
 	public void paintComponent(Graphics g) {
 
 		super.paintComponent(g);
-
 		Graphics2D g2 = (Graphics2D) g;
 
-		// Pits on current player border should thicken on that player's turn
-		float thickness = 3;
-		Stroke oldStroke = g2.getStroke();
-
-		// Color the board
+		// Color, draw outlines of the board, labels, and stones
 		boardFormatter.colorBoard(g2);
-
-		// Draw the outlines of the board
-		if (hasOutlines) {
-			g2.setColor(Color.BLACK);
-			g2.draw(board);
-			g2.draw(pitGraphicsMap.get(Pit.MANCALA_A).getOuterBound());
-			g2.draw(pitGraphicsMap.get(Pit.MANCALA_B).getOuterBound());
-			for (Pit pit : Pit.sideAPits) {
-				if (gameStarted && !isBoardStillAnimating() && model.getState().getPlayerTurn().equals(Player.A)
-						&& !pitGraphicsMap.get(pit).getStoneList().isEmpty())
-					g2.setStroke(new BasicStroke(thickness));
-				g2.draw(pitGraphicsMap.get(pit).getOuterBound());
-				g2.setStroke(oldStroke);
-			}
-			for (Pit pit : Pit.sideBPits) {
-				if (gameStarted && !isBoardStillAnimating() && model.getState().getPlayerTurn().equals(Player.B)
-						&& !pitGraphicsMap.get(pit).getStoneList().isEmpty())
-					g2.setStroke(new BasicStroke(thickness));
-				g2.draw(pitGraphicsMap.get(pit).getOuterBound());
-				g2.setStroke(oldStroke);
-			}
-		}
-
-		// Variables for drawing labels
-		g2.setComposite(c_trans);
-		int strWidth, strHeight, width, height, x, y;
-		String str, letter;
-		FontMetrics metrics;
-
-		// Draw labels on small pits
-		metrics = g.getFontMetrics(fontLabelSmallPits);
-		strHeight = metrics.getHeight();
-		g2.setFont(fontLabelSmallPits);
-		for (Pit pit : Pit.smallPits) {
-			str = pit.toString();
-			strWidth = metrics.stringWidth(str);
-			width = (int) getPitGraphicsMap().get(pit).getOuterBound().getWidth();
-			height = (int) getPitGraphicsMap().get(pit).getOuterBound().getHeight();
-			x = (int) getPitGraphicsMap().get(pit).getOuterBound().getX();
-			y = (int) getPitGraphicsMap().get(pit).getOuterBound().getY();
-			g2.drawString(str, x + (width - strWidth) / 2, y + (height - strHeight) / 2 + metrics.getAscent());
-		}
-
-		// Draw labels on big pits
-		metrics = g.getFontMetrics(fontLabelMancalas);
-		strHeight = metrics.getHeight();
-		g2.setFont(fontLabelMancalas);
-		for (Pit pit : Pit.mancalas) {
-			str = pit.toString();
-			width = (int) getPitGraphicsMap().get(pit).getOuterBound().getWidth();
-			height = (int) getPitGraphicsMap().get(pit).getOuterBound().getHeight();
-			x = (int) getPitGraphicsMap().get(pit).getOuterBound().getX();
-			y = (int) getPitGraphicsMap().get(pit).getOuterBound().getY();
-			for (int i = 0; i < str.length(); i++) {
-				letter = str.substring(i, i + 1);
-				if (letter.compareTo("_") == 0)
-					letter = " ";
-				strWidth = metrics.stringWidth(letter);
-				g2.drawString(letter.substring(0, 1), x + (width - strWidth) / 2,
-						y + (height - strHeight) / 2 + metrics.getAscent() + strHeight * (i - str.length() / 2));
-			}
-		}
-		g2.setComposite(c_reg);
-
-		// Draw stones
-		for (Pit pit : Pit.values())
-			for (Stone stone : pitGraphicsMap.get(pit).getStoneList()) {
-				MancalaStoneGraphics stoneGraphics = stoneGraphicsMap.get(stone).getStoneComponent();
-				g2.setColor(stoneGraphics.getColor());
-				g2.fill(new Ellipse2D.Double(stoneGraphics.getX(), stoneGraphics.getY(), stoneSize, stoneSize));
-				g2.setColor(Color.BLACK);
-				g2.draw(new Ellipse2D.Double(stoneGraphics.getX(), stoneGraphics.getY(), stoneSize, stoneSize));
-			}
+		boardFormatter.drawBoard(g2);
+		boardFormatter.drawLabelsPit(g2);
+		boardFormatter.drawStones(g2);
+		boardFormatter.drawLabelsNumberOfStonesPerPit(g2);
 
 	}
 
+	/**
+	 * For debugging purposes.
+	 */
 	@Override
 	public String toString() {
 		StringBuilder strBldr = new StringBuilder();
@@ -577,6 +508,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 			for (Pit pit : Pit.values())
 				if (!isBoardStillAnimating() && !model.getState().getSowablePits().isEmpty()
 						&& pitGraphicsMap.get(pit).getOuterBound().contains(point)) {
+					playerTurn = model.getState().getPlayerTurn();
 					model.getState().sow(pit);
 					model.getState().checkIfGameEnded();
 					previousState = new MancalaBoardPanel(MancalaBoardPanel.this);
@@ -599,11 +531,12 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		public void mouseMoved(MouseEvent event) {
 			Point point = event.getPoint();
 			Pit pitCurrent = null;
-			for (Pit pit : Pit.values())
+			for (Pit pit : Pit.values()) {
 				if (!isBoardStillAnimating() && pitGraphicsMap.get(pit).getOuterBound().contains(point)) {
 					pitCurrent = pit;
 					break;
 				}
+			}
 			pitNoHighlight = pitCurrent;
 			revalidate();
 			repaint();

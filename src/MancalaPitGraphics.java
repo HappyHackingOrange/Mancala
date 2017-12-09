@@ -15,7 +15,6 @@ public class MancalaPitGraphics {
 	private RectangularShape outerBound;
 	private RectangularShape innerBound;
 	private LinkedList<Stone> stoneList;
-//	private JLabel label;
 
 	// Constructor
 	public MancalaPitGraphics() {
