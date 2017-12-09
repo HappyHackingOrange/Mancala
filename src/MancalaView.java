@@ -172,24 +172,6 @@ public class MancalaView extends JFrame {
 		buttonStart = new JButton("Start");
 		buttonStart.addActionListener(event -> {
 			model.getState().setupGame(Integer.parseInt(bg.getSelection().getActionCommand()));
-			String playerAType = (String) playerAComboBox.getSelectedItem();
-			switch (playerAType) {
-			case ("Human"):
-				boardPanel.getPlayerMap().put(Player.A, true);
-				break;
-			case ("Computer"):
-				boardPanel.getPlayerMap().put(Player.A, false);
-				break;
-			}
-			String playerBType = (String) playerBComboBox.getSelectedItem();
-			switch (playerBType) {
-			case ("Human"):
-				boardPanel.getPlayerMap().put(Player.B, true);
-				break;
-			case ("Computer"):
-				boardPanel.getPlayerMap().put(Player.B, false);
-				break;
-			}
 			boardPanel.setupGraphics();
 			boardPanel.setGameStarted(true);
 			boardPanel.repaint();
