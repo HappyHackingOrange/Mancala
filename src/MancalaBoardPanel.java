@@ -31,6 +31,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 	private MancalaBoardFormatter boardFormatter;
 	private JLabel statusLabel;
 	private Player playerTurn;
+	private EnumMap<Player, Boolean> playerMap; // Whether to know if a player is human or computer
 
 	// Constructors
 	public MancalaBoardPanel(MancalaModel model, MancalaBoardFormatter boardFormatter, JLabel statusLabel) {
@@ -45,6 +46,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		previousState = null;
 		this.boardFormatter = boardFormatter;
 		this.statusLabel = statusLabel;
+		playerMap = new EnumMap<>(Player.class);
 
 		// Call the strategy pattern to draw a specific style of the board
 		boardFormatter.setBoardPanel(this);
@@ -81,6 +83,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		gameStarted = boardPanel.gameStarted;
 		previousState = null;
 		playerTurn = boardPanel.playerTurn;
+		playerMap = boardPanel.playerMap;
 		addMouseListener(new MouseReleasedListener());
 		addMouseMotionListener(new MouseMovedListener());
 		timer = new Timer(DELAY, this);
@@ -507,11 +510,14 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 			Point point = event.getPoint();
 			for (Pit pit : Pit.values())
 				if (!isBoardStillAnimating() && !model.getState().getSowablePits().isEmpty()
+						&& model.getState().getSowablePits().contains(pit)
 						&& pitGraphicsMap.get(pit).getOuterBound().contains(point)) {
 					playerTurn = model.getState().getPlayerTurn();
+//					boolean shouldSaveState = model.getState().shouldISaveGameState(true);
 					model.getState().sow(pit);
 					model.getState().checkIfGameEnded();
-					previousState = new MancalaBoardPanel(MancalaBoardPanel.this);
+//					if (shouldSaveState)
+						previousState = new MancalaBoardPanel(MancalaBoardPanel.this);
 					updateStonePositions(true);
 					break;
 				}

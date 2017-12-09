@@ -44,94 +44,94 @@ public class MancalaModel {
 		return state.getPreviousState();
 	}
 
-	/**
-	 * Build a game tree of all possible Mancala moves (this algorithm will take
-	 * forever and eat up all your PC memory, don't use it)
-	 * 
-	 * @param root
-	 *            the root node to grow a game tree.
-	 */
-	public void dfs(DefaultMutableTreeNode root) {
+//	/**
+//	 * Build a game tree of all possible Mancala moves (this algorithm will take
+//	 * forever and eat up all your PC memory, don't use it)
+//	 * 
+//	 * @param root
+//	 *            the root node to grow a game tree.
+//	 */
+//	public void dfs(DefaultMutableTreeNode root) {
+//
+//		Stack<DefaultMutableTreeNode> stack = new Stack<>();
+//		stack.push(root);
+//
+//		int gameNumber = 1;
+//		System.out.printf("running game %d... %n", gameNumber);
+//
+//		while (!stack.isEmpty()) {
+//
+//			DefaultMutableTreeNode parent = stack.pop();
+//			MancalaGameState parentState = new MancalaGameState((MancalaGameState) parent.getUserObject());
+//			int playerAScore = parentState.getPitMap().get(Pit.MANCALA_A).size();
+//			int playerBScore = parentState.getPitMap().get(Pit.MANCALA_B).size();
+//			int totalNumberOfStones = parentState.getInitStones() * 12;
+//
+//			// If game is over print out all the moves from the beginning and who won
+//			if (parentState.isGameOver() || playerAScore > totalNumberOfStones / 2
+//					|| playerBScore > totalNumberOfStones / 2) {
+//
+//				Object[] path = parent.getUserObjectPath();
+//
+//				for (int i = 1; i < path.length; i++) {
+//					System.out.printf("Turn %d: Player %s picked pit %s.%n%n", i,
+//							((MancalaGameState) path[i - 1]).getPlayerTurn(),
+//							((MancalaGameState) path[i]).getSowedPit());
+//					System.out.println(path[i]);
+//				}
+//
+//				if (playerAScore > playerBScore)
+//					System.out.println("Player A won.");
+//
+//				else if (playerAScore < playerBScore)
+//					System.out.println("Player B won.");
+//
+//				else
+//					System.out.println("Game ended in draw.");
+//
+//				System.out.printf("%nRunning game %d...%n%n", ++gameNumber);
+//
+//				continue;
+//			}
+//
+//			Object[] moves = parentState.getSowablePits().toArray();
+//
+//			for (int index = 0; index < moves.length; index++) {
+//				MancalaGameState childState = new MancalaGameState(parentState);
+//				childState.sow((Pit) moves[moves.length - index - 1]);
+//				childState.checkIfGameEnded();
+//				DefaultMutableTreeNode newChild = new DefaultMutableTreeNode(childState);
+//				gameTree.insertNodeInto(newChild, parent, index);
+//				stack.push(newChild);
+//			}
+//
+//		}
+//
+//	}
 
-		Stack<DefaultMutableTreeNode> stack = new Stack<>();
-		stack.push(root);
-
-		int gameNumber = 1;
-		System.out.printf("running game %d... %n", gameNumber);
-
-		while (!stack.isEmpty()) {
-
-			DefaultMutableTreeNode parent = stack.pop();
-			MancalaGameState parentState = new MancalaGameState((MancalaGameState) parent.getUserObject());
-			int playerAScore = parentState.getPitMap().get(Pit.MANCALA_A).size();
-			int playerBScore = parentState.getPitMap().get(Pit.MANCALA_B).size();
-			int totalNumberOfStones = parentState.getInitStones() * 12;
-
-			// If game is over print out all the moves from the beginning and who won
-			if (parentState.isGameOver() || playerAScore > totalNumberOfStones / 2
-					|| playerBScore > totalNumberOfStones / 2) {
-
-				Object[] path = parent.getUserObjectPath();
-
-				for (int i = 1; i < path.length; i++) {
-					System.out.printf("Turn %d: Player %s picked pit %s.%n%n", i,
-							((MancalaGameState) path[i - 1]).getPlayerTurn(),
-							((MancalaGameState) path[i]).getSowedPit());
-					System.out.println(path[i]);
-				}
-
-				if (playerAScore > playerBScore)
-					System.out.println("Player A won.");
-
-				else if (playerAScore < playerBScore)
-					System.out.println("Player B won.");
-
-				else
-					System.out.println("Game ended in draw.");
-
-				System.out.printf("%nRunning game %d...%n%n", ++gameNumber);
-
-				continue;
-			}
-
-			Object[] moves = parentState.getSowablePits().toArray();
-
-			for (int index = 0; index < moves.length; index++) {
-				MancalaGameState childState = new MancalaGameState(parentState);
-				childState.sow((Pit) moves[moves.length - index - 1]);
-				childState.checkIfGameEnded();
-				DefaultMutableTreeNode newChild = new DefaultMutableTreeNode(childState);
-				gameTree.insertNodeInto(newChild, parent, index);
-				stack.push(newChild);
-			}
-
-		}
-
-	}
-
-	/**
-	 * Write the game tree to file by serialization
-	 * 
-	 * @param filename
-	 *            the name of the file to write the game tree to
-	 */
-	public void saveGameTree(String filename) {
-		try {
-			FileOutputStream file = new FileOutputStream(filename);
-			ObjectOutputStream output = new ObjectOutputStream(file);
-			output.writeObject(filename);
-			output.close();
-			file.close();
-		} catch (IOException e) {
-			System.out.println("Unable to write to " + filename);
-			e.printStackTrace();
-		}
-	}
+//	/**
+//	 * Write the game tree to file by serialization
+//	 * 
+//	 * @param filename
+//	 *            the name of the file to write the game tree to
+//	 */
+//	public void saveGameTree(String filename) {
+//		try {
+//			FileOutputStream file = new FileOutputStream(filename);
+//			ObjectOutputStream output = new ObjectOutputStream(file);
+//			output.writeObject(filename);
+//			output.close();
+//			file.close();
+//		} catch (IOException e) {
+//			System.out.println("Unable to write to " + filename);
+//			e.printStackTrace();
+//		}
+//	}
 
 	/**
 	 * Minimax algorithm to calculate the best move
 	 * 
-	 * @return
+	 * @return the best move after looking ahead the number of moves (depth)
 	 */
 	public Pit minimax(int depth) {
 
@@ -229,7 +229,7 @@ public class MancalaModel {
 	}
 
 	/**
-	 * All testings are done here.
+	 * Tests the AI.
 	 * 
 	 * @param args
 	 */
