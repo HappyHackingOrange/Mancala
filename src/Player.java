@@ -1,5 +1,5 @@
 /**
- * Enumeration of players.
+ * Enumerator of players
  * 
  * @author Vincent Stowbunenko
  *

@@ -48,7 +48,6 @@ public class MancalaView extends JFrame {
 		radioBox.add(Box.createHorizontalGlue());
 		radioBox.add(rbutton2);
 		radioBox.add(Box.createHorizontalGlue());
-
 		Box initStoneBox = Box.createVerticalBox();
 		initStoneBox.add(initStoneLabelBox);
 		initStoneBox.add(radioBox);
@@ -115,7 +114,7 @@ public class MancalaView extends JFrame {
 		playerABox.add(playerAComboBox);
 		playerABox.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-		// For player A
+		// For player B
 		JLabel playerBLabel = new JLabel("Player B:");
 		Box playerBLabelBox = Box.createHorizontalBox();
 		playerBLabelBox.add(playerBLabel);
@@ -136,7 +135,7 @@ public class MancalaView extends JFrame {
 		playerBBox.add(playerBComboBox);
 		playerBBox.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-		// Add panel with start and undo buttons at upper left corner
+		// Add all the option boxes in an optionsBox
 		Box optionsBox = Box.createVerticalBox();
 		optionsBox.add(Box.createGlue());
 		optionsBox.add(initStoneBox);
@@ -162,11 +161,11 @@ public class MancalaView extends JFrame {
 		boardPanel = new MancalaBoardPanel(model, boardFormatter, statusLabel);
 		boardPanel.setLayout(null);
 
-		// Put board and start/undo button in one box
+		// Put board, status label, and  start/undo push buttons in one box
 		Box leftBox = Box.createVerticalBox();
 		leftBox.add(boardPanel);
 
-		// Bottom panel, status label and push buttons
+		// Bottom panel containing status label and push buttons
 		JPanel bottomPanel = new JPanel();
 		bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.LINE_AXIS));
 		buttonStart = new JButton("Start");
@@ -178,19 +177,19 @@ public class MancalaView extends JFrame {
 			String playerAType = (String) playerAComboBox.getSelectedItem();
 			switch (playerAType) {
 			case ("Human"):
-				boardPanel.getPlayerMap().put(Player.A, true);
+				boardPanel.isHuman().put(Player.A, true);
 				break;
 			case ("Computer"):
-				boardPanel.getPlayerMap().put(Player.A, false);
+				boardPanel.isHuman().put(Player.A, false);
 				break;
 			}
 			String playerBType = (String) playerBComboBox.getSelectedItem();
 			switch (playerBType) {
 			case ("Human"):
-				boardPanel.getPlayerMap().put(Player.B, true);
+				boardPanel.isHuman().put(Player.B, true);
 				break;
 			case ("Computer"):
-				boardPanel.getPlayerMap().put(Player.B, false);
+				boardPanel.isHuman().put(Player.B, false);
 				break;
 			}
 		});

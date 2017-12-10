@@ -54,12 +54,4 @@ public class MancalaPitGraphics {
 		this.stoneList = stoneList;
 	}
 
-//	public JLabel getLabel() {
-//		return label;
-//	}
-
-//	public void setLabel(JLabel label) {
-//		this.label = label;
-//	}
-
 }

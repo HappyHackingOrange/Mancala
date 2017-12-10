@@ -23,10 +23,9 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 	// Instance variables
 	private MancalaModel model;
 	private EnumMap<Pit, MancalaPitGraphics> pitGraphicsMap;
-	private EnumMap<Player, Boolean> playerMap; // Whether to know if a player is human or computer
+	private EnumMap<Player, Boolean> isHuman; // Whether to know if a player is human or computer
 	private Map<Stone, Tuple<MancalaStoneGraphics>> stoneGraphicsMap;
 	private boolean gameStarted;
-	private int computerTurnsInARow;
 	private Pit pitNoHighlight; // the pit to highlight when mouse is over the pit
 	private Timer timer;
 	private MancalaBoardPanel previousState;
@@ -41,14 +40,15 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		pitGraphicsMap = new EnumMap<>(Pit.class);
 		for (Pit pit : Pit.values())
 			pitGraphicsMap.put(pit, new MancalaPitGraphics());
+		isHuman = new EnumMap<>(Player.class);
+		for (Player player : Player.values())
+			isHuman.put(player, false);
 		stoneGraphicsMap = new HashMap<>();
 		gameStarted = false;
 		pitNoHighlight = null;
 		previousState = null;
 		this.boardFormatter = boardFormatter;
 		this.statusLabel = statusLabel;
-		playerMap = new EnumMap<>(Player.class);
-		computerTurnsInARow = 0;
 
 		// Call the strategy pattern to draw a specific style of the board
 		boardFormatter.setBoardPanel(this);
@@ -64,7 +64,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 
 	}
 
-	// Copy-constructor. Used to save states.
+	// Copy-constructor. Used to save states for the viewer side.
 	public MancalaBoardPanel(MancalaBoardPanel boardPanel) {
 		model = boardPanel.model;
 		boardFormatter = boardPanel.boardFormatter.cloneThis();
@@ -85,8 +85,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		gameStarted = boardPanel.gameStarted;
 		previousState = null;
 		playerTurn = boardPanel.playerTurn;
-		playerMap = boardPanel.playerMap;
-		computerTurnsInARow = 0;
+		isHuman = boardPanel.isHuman;
 		addMouseListener(new MouseReleasedListener());
 		addMouseMotionListener(new MouseMovedListener());
 		timer = new Timer(DELAY, this);
@@ -134,8 +133,8 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		return stoneGraphicsMap;
 	}
 
-	public EnumMap<Player, Boolean> getPlayerMap() {
-		return playerMap;
+	public EnumMap<Player, Boolean> isHuman() {
+		return isHuman;
 	}
 
 	/**
@@ -148,8 +147,8 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 	}
 
 	/**
-	 * Randomize all stone positions. Need to make sure each stones are not too
-	 * close to each other. The stones will not animate.
+	 * Randomize all stone positions. It makes sure each stones are not too close to
+	 * each other. The stones will not animate.
 	 */
 	public void randomizeAllPositions() {
 
@@ -190,8 +189,8 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 	}
 
 	/**
-	 * Place a stone in a random position in a hole. Also has an option to whether
-	 * animate this stone or not.
+	 * Places a stone in a random position in the pit shape. Also has an option to
+	 * whether to animate this stone or not.
 	 * 
 	 * @param stone
 	 * @param shape
@@ -239,7 +238,8 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 	}
 
 	/**
-	 * Calculate distance between final positions of stones.
+	 * Calculate distance between final positions of stones after animating the
+	 * stones
 	 * 
 	 * @param stone1
 	 * @param stone2
@@ -278,6 +278,9 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 
 	/**
 	 * Poll a stone graphics from the pit graphics and update stone's pit info.
+	 * 
+	 * @param pit
+	 * @return the stone that was polled
 	 */
 	public Stone pollStone(Pit pit) {
 		Stone stone = pitGraphicsMap.get(pit).getStoneList().poll();
@@ -286,7 +289,12 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 	}
 
 	/**
-	 * Remove a stone graphic from the pit graphics and update stone's pit info.
+	 * Remove a specific stone graphic from the pit graphics and update stone's pit
+	 * info.
+	 * 
+	 * @param pit
+	 * @param stone
+	 * @return the stone that was removed
 	 */
 	public Stone removeStone(Pit pit, Stone stone) {
 		pitGraphicsMap.get(pit).getStoneList().remove(stone);
@@ -297,6 +305,8 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 
 	/**
 	 * Empty the stone graphics from the pit graphics.
+	 * 
+	 * @param pit
 	 */
 	public void emptyPitGraphics(Pit pit) {
 		while (!pitGraphicsMap.get(pit).getStoneList().isEmpty())
@@ -329,8 +339,11 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 	}
 
 	/**
-	 * Randomize all stone positions which the stones that have moved. Need to check
-	 * to make sure the stones are not too close to each other.
+	 * Randomize all stone positions which the stones that have moved. It checks to
+	 * make sure the stones are not too close to each other.
+	 * 
+	 * @param animate
+	 *            whether to animate the stones or not
 	 */
 	public void updateStonePositions(boolean animate) {
 
@@ -358,6 +371,11 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 	 * Update the stone position.
 	 * 
 	 * @param stone
+	 *            the stone to update its position
+	 * @param pit
+	 *            the pit which to put the stone in
+	 * @param animate
+	 *            whether to animate the stones or not
 	 */
 	public void updateStonePosition(Stone stone, Pit pit, boolean animate) {
 
@@ -394,7 +412,7 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 	}
 
 	/**
-	 * Check if the stones are still moving around.
+	 * Checks if the stones are still moving around.
 	 */
 	public boolean isBoardStillAnimating() {
 		for (Tuple<MancalaStoneGraphics> tuple : stoneGraphicsMap.values())
@@ -403,6 +421,9 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		return false;
 	}
 
+	/**
+	 * Actions to do at a fixed interval.
+	 */
 	@Override
 	public void actionPerformed(ActionEvent event) {
 
@@ -410,7 +431,8 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 
 			MancalaStoneGraphics stoneGraphics = tuple.getStoneComponent();
 
-			// Check if any of the stones are animating
+			// Check if any of the stones are animating. If so, move them to next segment
+			// until they go to their final position.
 			if (stoneGraphics.isAnimating()) {
 				if (stoneGraphics.getDiffX() * (stoneGraphics.getRandX() - stoneGraphics.getNextX()) > 0
 						&& stoneGraphics.getDiffY() * (stoneGraphics.getRandY() - stoneGraphics.getNextY()) > 0) {
@@ -418,14 +440,16 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 					stoneGraphics.setY(stoneGraphics.getNextY());
 					stoneGraphics.setNextX(stoneGraphics.getNextX() + stoneGraphics.getSegmentX());
 					stoneGraphics.setNextY(stoneGraphics.getNextY() + stoneGraphics.getSegmentY());
+					revalidate();
+					repaint();
 				} else {
 					stoneGraphics.setX(stoneGraphics.getRandX());
 					stoneGraphics.setY(stoneGraphics.getRandY());
 					stoneGraphics.setAnimating(false);
 					updateStonePositions(true);
+					revalidate();
+					paintImmediately(getVisibleRect());
 				}
-				revalidate();
-				repaint();
 			}
 
 		}
@@ -450,16 +474,14 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 		} else {
 			if (isGameStarted()) {
 				playerTurn = model.getState().getPlayerTurn();
-				if (playerTurn == Player.A && !playerMap.get(Player.A)
-						|| playerTurn == Player.B && !playerMap.get(Player.B)) {
-
-					computerTurnsInARow++;
+				if (playerTurn == Player.A && !isHuman.get(Player.A)
+						|| playerTurn == Player.B && !isHuman.get(Player.B)) {
 
 					statusLabel.setText(String.format("Player %s is thinking...", model.getState().getPlayerTurn()));
 					statusLabel.paintImmediately(statusLabel.getVisibleRect());
 
 					// AI carefully selects a pit
-					model.getState().sow(model.minimax(8));
+					model.getState().sow(model.minimax(7));
 
 					// // AI randomly selects a pit
 					// EnumSet<Pit> sowablePits = model.getState().getSowablePits();
@@ -524,10 +546,10 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 	}
 
 	/**
-	 * Mouse adapter class to just focus on one listener (do something when the
-	 * mouse is released)
+	 * Mouse adapter class to just focus on one listener, to do something when the
+	 * mouse is released.
 	 * 
-	 * @author Vincetn Stowbunenko
+	 * @author Vincent Stowbunenko
 	 *
 	 */
 	private class MouseReleasedListener extends MouseAdapter {
@@ -541,17 +563,10 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 						&& model.getState().getSowablePits().contains(pit)
 						&& pitGraphicsMap.get(pit).getOuterBound().contains(point)) {
 					playerTurn = model.getState().getPlayerTurn();
-					boolean shouldSaveState = false;
-					if (computerTurnsInARow == 0) {
-						model.getState().savePreviousState();
-						shouldSaveState = true;
-					} else {
-						computerTurnsInARow = 0;
-					}
+					model.getState().savePreviousState();
 					model.getState().sow(pit);
 					model.getState().checkIfGameEnded();
-					if (shouldSaveState)
-						previousState = new MancalaBoardPanel(MancalaBoardPanel.this);
+					previousState = new MancalaBoardPanel(MancalaBoardPanel.this);
 					updateStonePositions(true);
 					break;
 				}
@@ -561,7 +576,10 @@ public class MancalaBoardPanel extends JPanel implements ActionListener {
 	}
 
 	/**
-	 * Mouse motion adapter class to listen for mouse motions
+	 * Mouse motion adapter class to listen for mouse motions.
+	 * 
+	 * @author Vincent Stowbunenko
+	 *
 	 */
 	private class MouseMovedListener extends MouseMotionAdapter {
 

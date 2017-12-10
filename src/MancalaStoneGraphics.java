@@ -85,14 +85,6 @@ public class MancalaStoneGraphics {
 		this.color = color;
 	}
 
-//	public Pit getPit() {
-//		return pit;
-//	}
-
-//	public void setPit(Pit pit) {
-//		this.pit = pit;
-//	}
-
 	public boolean isAnimating() {
 		return isAnimating;
 	}

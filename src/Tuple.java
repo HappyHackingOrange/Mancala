@@ -1,5 +1,5 @@
 /**
- * 2-tuple structure to store an ordered list of 2 elements.
+ * Special 2-tuple structure to store an ordered list of 2 elements, for stone components.
  * 
  * @author Vinent Stowbunenko
  *
@@ -18,7 +18,6 @@ public class Tuple<StoneComponent> {
 	
 	// Copy-constructor
 	public Tuple(Tuple<StoneComponent> tuple) {
-//		stoneComponent = tuple.stoneComponent;
 		stoneComponent = null;
 		pit = tuple.pit;
 	}

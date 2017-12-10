@@ -41,6 +41,7 @@ public class MancalaBoardStandard implements MancalaBoardFormatter {
 		this.boardPanel = boardPanel;
 	}
 
+	// Copy-constructor
 	public MancalaBoardStandard(MancalaBoardStandard boardStandard) {
 		boardPanel = boardStandard.boardPanel;
 		board = boardStandard.board;
@@ -201,7 +202,8 @@ public class MancalaBoardStandard implements MancalaBoardFormatter {
 		for (Pit pit : Pit.sideAPits) {
 			boolean isPlayerATurn = boardPanel.getModel().getState().getPlayerTurn().equals(Player.A);
 			boolean isPitEmpty = boardPanel.getPitGraphicsMap().get(pit).getStoneList().isEmpty();
-			if (isGameStarted && !isBoardStillAnimating && isPlayerATurn && !isPitEmpty)
+			boolean isHuman = boardPanel.isHuman().get(Player.A);
+			if (isGameStarted && !isBoardStillAnimating && isPlayerATurn && isHuman && !isPitEmpty)
 				g2.setStroke(new BasicStroke(highlightThickness));
 			g2.draw(boardPanel.getPitGraphicsMap().get(pit).getOuterBound());
 			g2.setStroke(oldStroke);
@@ -209,13 +211,17 @@ public class MancalaBoardStandard implements MancalaBoardFormatter {
 		for (Pit pit : Pit.sideBPits) {
 			boolean isPlayerBTurn = boardPanel.getModel().getState().getPlayerTurn().equals(Player.B);
 			boolean isPitEmpty = boardPanel.getPitGraphicsMap().get(pit).getStoneList().isEmpty();
-			if (isGameStarted && !isBoardStillAnimating && isPlayerBTurn && !isPitEmpty)
+			boolean isHuman = boardPanel.isHuman().get(Player.B);
+			if (isGameStarted && !isBoardStillAnimating && isPlayerBTurn && isHuman && !isPitEmpty)
 				g2.setStroke(new BasicStroke(highlightThickness));
 			g2.draw(boardPanel.getPitGraphicsMap().get(pit).getOuterBound());
 			g2.setStroke(oldStroke);
 		}
 	}
 
+	/**
+	 * Draws the labels on the pit.
+	 */
 	@Override
 	public void drawLabelsPit(Graphics2D g2) {
 

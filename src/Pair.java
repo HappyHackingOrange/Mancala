@@ -1,5 +1,5 @@
 /**
- * Class to store two variables.
+ * Generic pair structure to store two variables.
  * 
  * @author Vincent Stowbunenko
  *

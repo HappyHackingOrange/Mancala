@@ -85,7 +85,7 @@ public class MancalaGameState {
 	public MancalaGameState getPreviousState() {
 		return previousState;
 	}
-	
+
 	public void savePreviousState() {
 		previousState = new MancalaGameState(this);
 	}
@@ -117,6 +117,18 @@ public class MancalaGameState {
 	}
 
 	/**
+	 * Remove a stone from a pit.
+	 * 
+	 * @param pit
+	 * @return the stone that was removed from the pit.
+	 */
+	public Stone pollStone(Pit pit) {
+		Stone stone = pitMap.get(pit).poll();
+		stoneMap.put(stone, null);
+		return stone;
+	}
+
+	/**
 	 * Remove a specified stone from a pit.
 	 * 
 	 * @param stone
@@ -126,20 +138,6 @@ public class MancalaGameState {
 	public Stone removeStone(Stone stone, Pit pit) {
 		stoneMap.put(stone, null);
 		pitMap.get(pit).remove(stone);
-		return stone;
-	}
-
-	/**
-	 * Remove a stone from a pit.
-	 * 
-	 * @param pit
-	 * @return the stone that was removed from the pit.
-	 */
-	public Stone pollStone(Pit pit) {
-		Stone stone = pitMap.get(pit).poll();
-		// stone.setPit(null);
-		// searchTuple(stone).setPit(null);
-		stoneMap.put(stone, null);
 		return stone;
 	}
 
@@ -162,8 +160,6 @@ public class MancalaGameState {
 	public void emptyAllPits() {
 		for (Pit pit : pitMap.keySet())
 			emptyPit(pit);
-		// stoneList.clear();
-		// tupleList.clear();
 		stoneMap.clear();
 	}
 
@@ -417,26 +413,7 @@ public class MancalaGameState {
 		for (Pit pit : Pit.sideAPits)
 			sb.append(String.format("%3d", pitMap.get(pit).size()));
 		sb.append("\n\n");
-		// sb.append(String.format("Stone Sequence: %s%n%n", stoneSequence));
 		return sb.toString();
-
-		// // Print out pit graphics map info
-		// StringBuilder strBldr = new StringBuilder(sb);
-		// strBldr.append("pitMap:\n");
-		// for (Pit pit : Pit.values()) {
-		// strBldr.append(String.format(" %s:%n ", pit));
-		// for (Stone stone : pitMap.get(pit))
-		// strBldr.append(String.format("%x:%s ", stone.hashCode(), stone.getPit()));
-		// strBldr.append("\n");
-		// }
-		//
-		// // Print out stone graphics map info
-		// strBldr.append("stoneList:\n");
-		// for (Stone stone : stoneList) {
-		// strBldr.append(String.format(" %x:%s%n", stone.hashCode(), stone.getPit()));
-		// }
-		//
-		// return strBldr.toString();
 
 	}
 

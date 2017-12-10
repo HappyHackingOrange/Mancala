@@ -2,6 +2,8 @@ import javax.swing.*;
 
 /**
  * Test and run the Mancala game using a MVC model.
+ * The code is uploaded in:
+ * https://github.com/HappyHackingOrange/Mancala
  * 
  * @author Vincent Stowbunenko
  *
